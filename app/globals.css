@@ -1,26 +1,269 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ============================================================
+   Light Mode Variables
+   ============================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: rgba(148, 163, 184, 0.2);
+  --card-hover: rgba(148, 163, 184, 0.1);
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+  --sidebar-active: #e2e8f0;
+  --sidebar-active-bg: rgba(99, 102, 241, 0.15);
+  --sidebar-accent: #6366f1;
+  --muted: #64748b;
+  --muted-bg: #f1f5f9;
+  --border: #e2e8f0;
+  --profit: #10b981;
+  --loss: #f43f5e;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.25);
+  --chart-grid: #e2e8f0;
+  --tooltip-bg: #ffffff;
+  --tooltip-border: #e2e8f0;
+  --modal-overlay: rgba(15, 23, 42, 0.5);
+  --input-bg: #f8fafc;
+  --input-border: #cbd5e1;
+  --badge-buy-bg: rgba(16, 185, 129, 0.1);
+  --badge-sell-bg: rgba(244, 63, 94, 0.1);
 }
 
+/* ============================================================
+   Dark Mode Variables
+   ============================================================ */
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --card-bg: rgba(30, 41, 59, 0.5);
+  --card-border: rgba(148, 163, 184, 0.1);
+  --card-hover: rgba(148, 163, 184, 0.05);
+  --sidebar-bg: #070d1a;
+  --sidebar-text: #64748b;
+  --sidebar-active: #f1f5f9;
+  --sidebar-active-bg: rgba(99, 102, 241, 0.2);
+  --sidebar-accent: #818cf8;
+  --muted: #94a3b8;
+  --muted-bg: rgba(30, 41, 59, 0.5);
+  --border: rgba(148, 163, 184, 0.12);
+  --profit: #34d399;
+  --loss: #fb7185;
+  --accent: #818cf8;
+  --accent-glow: rgba(129, 140, 248, 0.3);
+  --chart-grid: rgba(148, 163, 184, 0.1);
+  --tooltip-bg: #1e293b;
+  --tooltip-border: rgba(148, 163, 184, 0.15);
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --badge-buy-bg: rgba(52, 211, 153, 0.12);
+  --badge-sell-bg: rgba(251, 113, 133, 0.12);
+}
+
+/* ============================================================
+   Tailwind v4 Theme Tokens
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-card-hover: var(--card-hover);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-bg: var(--sidebar-active-bg);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-muted: var(--muted);
+  --color-muted-bg: var(--muted-bg);
+  --color-border: var(--border);
+  --color-profit: var(--profit);
+  --color-loss: var(--loss);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+  --color-chart-grid: var(--chart-grid);
+  --color-tooltip-bg: var(--tooltip-bg);
+  --color-tooltip-border: var(--tooltip-border);
+  --color-modal-overlay: var(--modal-overlay);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-badge-buy-bg: var(--badge-buy-bg);
+  --color-badge-sell-bg: var(--badge-sell-bg);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ============================================================
+   Base Styles
+   ============================================================ */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Scrollbar Styling
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* ============================================================
+   Glass Card
+   ============================================================ */
+.glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 40px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   Ambient Backgrounds
+   ============================================================ */
+.ambient-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  background-color: var(--background);
+}
+
+.ambient-blob-1, .ambient-blob-2 {
+  position: absolute;
+  filter: blur(120px);
+  opacity: 0.15;
+  border-radius: 50%;
+  animation: float 20s infinite ease-in-out;
+}
+
+.ambient-blob-1 {
+  top: -10%;
+  left: 10%;
+  width: 50vw;
+  height: 50vw;
+  background: #6366f1;
+}
+
+.ambient-blob-2 {
+  bottom: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: #ec4899;
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+/* ============================================================
+   Gradient Text
+   ============================================================ */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   Fade-in Animation
+   ============================================================ */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ============================================================
+   Pulse glow for active sidebar item
+   ============================================================ */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50% { box-shadow: 0 0 20px var(--accent-glow); }
+}
+
+.glow-active {
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   Recharts tooltip override
+   ============================================================ */
+.recharts-default-tooltip {
+  background: var(--tooltip-bg) !important;
+  border: 1px solid var(--tooltip-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
+}
+
+/* ============================================================
+   Table hover rows
+   ============================================================ */
+.table-row-hover {
+  transition: background 0.15s ease;
+}
+
+.table-row-hover:hover {
+  background: var(--card-hover);
+}
+
+/* ============================================================
+   Modal backdrop
+   ============================================================ */
+.modal-backdrop {
+  background: var(--modal-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
