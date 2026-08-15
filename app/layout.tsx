@@ -15,6 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+import { WatchlistProvider } from "@/context/WatchlistContext";
+import { TransactionProvider } from "@/context/TransactionContext";
+
 export const metadata: Metadata = {
   title: "StockWise — Smart Portfolio Tracker",
   description:
@@ -29,11 +32,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-full">
-          <div className="ambient-bg">
-            <div className="ambient-blob-1"></div>
-            <div className="ambient-blob-2"></div>
-          </div>
-          <AppShell>{children}</AppShell>
+        <TransactionProvider>
+          <WatchlistProvider>
+            <div className="ambient-bg">
+              <div className="ambient-blob-1"></div>
+              <div className="ambient-blob-2"></div>
+            </div>
+            <AppShell>{children}</AppShell>
+          </WatchlistProvider>
+        </TransactionProvider>
       </body>
     </html>
   );

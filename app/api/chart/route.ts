@@ -3,14 +3,23 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get('symbol');
+  const tf = searchParams.get('tf') || 'ALL';
 
   if (!symbol) {
     return NextResponse.json({ error: "Missing symbol parameter" }, { status: 400 });
   }
 
   try {
-    // Fetch 2 years of daily data
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=2y`;
+    let interval = '1d';
+    let range = 'max';
+
+    if (tf === '1D') {
+      interval = '5m';
+      range = '1d';
+    }
+
+    // Fetch historical data
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
     
     const res = await fetch(url, {
       headers: {
@@ -46,11 +55,20 @@ export async function GET(request: Request) {
           continue;
         }
 
-        const date = new Date(timestamp[i] * 1000);
-        const dateString = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+        let timeValue: string | number;
+        if (tf === '1D') {
+          // For intraday, lightweight-charts needs unix timestamp in seconds
+          // Actually Yahoo Finance timestamp is already in seconds, but we need to ensure it's a number
+          // And we might need to offset timezone if we want local time, but lightweight charts handles local time conversion if configured, or just pass seconds.
+          timeValue = timestamp[i] as number;
+        } else {
+          // For daily, it expects "YYYY-MM-DD"
+          const date = new Date(timestamp[i] * 1000);
+          timeValue = date.toISOString().split('T')[0];
+        }
 
         formattedData.push({
-          date: dateString,
+          date: timeValue,
           open: quote.open[i],
           high: quote.high[i],
           low: quote.low[i],

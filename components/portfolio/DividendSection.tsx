@@ -1,10 +1,11 @@
 "use client";
 
-import { holdings } from "@/lib/mock-data";
+import { useTransactions } from "@/context/TransactionContext";
 import { formatCurrency, formatPercent, cn } from "@/lib/utils";
 
 export default function DividendSection() {
-  const dividendHoldings = holdings.filter((h) => h.hasDividend);
+  const { holdings } = useTransactions();
+  const dividendHoldings = holdings.filter((h: any) => h.hasDividend);
 
   if (dividendHoldings.length === 0) return null;
 

@@ -5,34 +5,48 @@ import { useSearchParams, useRouter } from "next/navigation";
 import CandlestickChart from "@/components/charts/CandlestickChart";
 import TechnicalAnalysis from "@/components/dashboard/TechnicalAnalysis";
 import AIInsights from "@/components/dashboard/AIInsights";
-import { holdings } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-
-// Quick filter tabs (from portfolio)
-const portfolioSymbols = holdings.map((h) => ({
-  symbol: h.symbol,
-  name: h.name,
-}));
+import { useWatchlist } from "@/context/WatchlistContext";
+import { useTransactions } from "@/context/TransactionContext";
 
 export default function CandlestickSection() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { holdings } = useTransactions();
   
+  // Extract unique symbols from holdings
+  const portfolioSymbols = holdings.map((h) => ({
+    symbol: h.symbol,
+    name: h.name,
+  }));
+
   // Read from URL, fallback to first portfolio symbol
   const urlSymbol = searchParams.get("symbol");
-  const activeSymbol = urlSymbol || portfolioSymbols[0].symbol;
+  const activeSymbol = urlSymbol || (portfolioSymbols.length > 0 ? portfolioSymbols[0].symbol : "AAPL");
 
   const [chartData, setChartData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeName, setActiveName] = useState<string>("");
+  const [timeFrame, setTimeFrame] = useState<string>("ALL");
+
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+  const inWatchlist = isInWatchlist(activeSymbol);
+
+  const handleToggleWatchlist = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(activeSymbol);
+    } else {
+      addToWatchlist(activeSymbol, activeName || activeSymbol);
+    }
+  };
 
   useEffect(() => {
     async function fetchChartData() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/chart?symbol=${encodeURIComponent(activeSymbol)}`);
+        const res = await fetch(`/api/chart?symbol=${encodeURIComponent(activeSymbol)}&tf=${timeFrame}`);
         if (!res.ok) throw new Error("Failed to fetch chart data");
         const data = await res.json();
         
@@ -51,9 +65,7 @@ export default function CandlestickSection() {
     }
 
     fetchChartData();
-  }, [activeSymbol]);
-
-
+  }, [activeSymbol, timeFrame]);
 
   return (
     <div className="animate-fade-in-up opacity-0 stagger-4">
@@ -97,6 +109,33 @@ export default function CandlestickSection() {
             height={420}
             symbol={activeSymbol}
             title={`${activeName} · Historical Price Action`}
+            timeFrame={timeFrame}
+            onTimeFrameChange={setTimeFrame}
+            headerAction={
+              <button
+                onClick={handleToggleWatchlist}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border",
+                  inWatchlist
+                    ? "bg-profit/10 text-profit border-profit/20 hover:bg-profit/20"
+                    : "bg-muted-bg text-muted border-border hover:text-foreground hover:bg-card-bg"
+                )}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill={inWatchlist ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                {inWatchlist ? "Saved" : "Watchlist"}
+              </button>
+            }
           />
         )}
       </div>

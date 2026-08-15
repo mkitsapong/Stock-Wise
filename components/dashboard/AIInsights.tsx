@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { formatCurrency, cn } from "@/lib/utils";
+import NewsReaderModal from "./NewsReaderModal";
 
 interface NewsItem {
   uuid: string;
@@ -25,7 +26,8 @@ export default function AIInsights({ symbol, chartData }: AIInsightsProps) {
   const [badNews, setBadNews] = useState<NewsItem[]>([]);
   const [cautions, setCautions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [expandedNewsId, setExpandedNewsId] = useState<string | null>(null);
+  const [expandedNewsIds, setExpandedNewsIds] = useState<string[]>([]);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   useEffect(() => {
     async function fetchInsights() {
@@ -145,8 +147,11 @@ export default function AIInsights({ symbol, chartData }: AIInsightsProps) {
             <NewsSummaryCard 
               key={news.uuid} 
               news={news} 
-              isExpanded={expandedNewsId === news.uuid}
-              onToggle={() => setExpandedNewsId(expandedNewsId === news.uuid ? null : news.uuid)}
+              isExpanded={expandedNewsIds.includes(news.uuid)}
+              onToggle={() => setExpandedNewsIds(prev => 
+                prev.includes(news.uuid) ? prev.filter(id => id !== news.uuid) : [...prev, news.uuid]
+              )}
+              onReadFullNews={() => setSelectedNews(news)}
               type="profit"
             />
           )) : (
@@ -167,8 +172,11 @@ export default function AIInsights({ symbol, chartData }: AIInsightsProps) {
             <NewsSummaryCard 
               key={news.uuid} 
               news={news} 
-              isExpanded={expandedNewsId === news.uuid}
-              onToggle={() => setExpandedNewsId(expandedNewsId === news.uuid ? null : news.uuid)}
+              isExpanded={expandedNewsIds.includes(news.uuid)}
+              onToggle={() => setExpandedNewsIds(prev => 
+                prev.includes(news.uuid) ? prev.filter(id => id !== news.uuid) : [...prev, news.uuid]
+              )}
+              onReadFullNews={() => setSelectedNews(news)}
               type="loss"
             />
           )) : (
@@ -196,6 +204,12 @@ export default function AIInsights({ symbol, chartData }: AIInsightsProps) {
         </ul>
       </div>
 
+      {/* News Reader Modal */}
+      <NewsReaderModal 
+        news={selectedNews} 
+        isOpen={!!selectedNews} 
+        onClose={() => setSelectedNews(null)} 
+      />
     </div>
   );
 }
@@ -204,11 +218,13 @@ function NewsSummaryCard({
   news, 
   isExpanded, 
   onToggle, 
+  onReadFullNews,
   type 
 }: { 
   news: NewsItem; 
   isExpanded: boolean; 
   onToggle: () => void;
+  onReadFullNews: () => void;
   type: "profit" | "loss";
 }) {
   const [summary, setSummary] = useState<string | null>(null);
@@ -250,20 +266,26 @@ function NewsSummaryCard({
       </button>
       <div className="flex items-center justify-between mt-1">
         <span className="text-[10px] text-muted">{news.publisher}</span>
-        <a href={news.link} target="_blank" rel="noreferrer" className="text-[10px] text-accent hover:underline flex items-center gap-1">
+        <button onClick={onReadFullNews} className="text-[10px] text-accent hover:underline flex items-center gap-1 relative z-10 cursor-pointer">
           อ่านข่าวเต็ม <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        </a>
+        </button>
       </div>
 
       {isExpanded && (
-        <div className="mt-3 p-3 bg-card-bg/80 border border-border/50 rounded-lg text-xs leading-relaxed animate-fade-in-up text-muted-foreground">
+        <div className="mt-3 p-3 bg-card-bg/80 border border-border/50 rounded-lg text-xs leading-relaxed animate-fade-in-up text-muted-foreground relative z-10">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted animate-pulse">
                <svg className="h-3 w-3 animate-spin text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                กำลังใช้ AI อ่านและสรุปข่าว...
             </div>
           ) : (
-             <div className="whitespace-pre-line">{summary}</div>
+             <div className="whitespace-pre-line">
+                {summary === "ไม่สามารถดึงข้อมูลสรุปข่าวได้ในขณะนี้ กรุณาคลิกอ่านข่าวเต็ม" ? (
+                  <span>
+                    ไม่สามารถดึงข้อมูลสรุปข่าวได้ในขณะนี้ <button onClick={onReadFullNews} className="text-accent hover:underline font-medium inline-flex items-center gap-1 cursor-pointer">คลิกที่นี่เพื่ออ่านข่าวเต็ม <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>
+                  </span>
+                ) : summary}
+             </div>
           )}
         </div>
       )}

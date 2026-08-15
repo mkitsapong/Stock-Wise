@@ -31,10 +31,9 @@ export function formatPercent(value: number): string {
  * Format a number with commas
  * e.g. 1234567 → "1,234,567"
  */
-export function formatNumber(value: number, decimals = 0): string {
+export function formatNumber(value: number, maxDecimals = 9): string {
   return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: maxDecimals,
   }).format(value);
 }
 

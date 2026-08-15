@@ -18,7 +18,7 @@ import { useTheme } from "@/components/layout/ThemeProvider";
 // ============================================================
 
 export interface CandlestickDataPoint {
-  date: string;   // "YYYY-MM-DD" format
+  date: string | number;   // "YYYY-MM-DD" format or unix timestamp
   open: number;
   high: number;
   low: number;
@@ -36,6 +36,12 @@ interface CandlestickChartProps {
   title?: string;
   /** Optional symbol name displayed as subtitle */
   symbol?: string;
+  /** Current timeframe (controlled component) */
+  timeFrame?: string;
+  /** Callback when timeframe changes */
+  onTimeFrameChange?: (tf: string) => void;
+  /** Optional action element to render in the header */
+  headerAction?: React.ReactNode;
 }
 
 // ============================================================
@@ -221,6 +227,9 @@ export default function CandlestickChart({
   showGrid = true,
   title,
   symbol,
+  timeFrame = "ALL",
+  onTimeFrameChange,
+  headerAction,
 }: CandlestickChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -229,8 +238,6 @@ export default function CandlestickChart({
   const isDark = theme === "dark";
 
   const [chartType, setChartType] = useState<"STANDARD" | "HEIKIN_ASHI">("HEIKIN_ASHI");
-  // Timeframe as Range
-  const [timeFrame, setTimeFrame] = useState<"1W" | "1M" | "3M" | "6M" | "1Y" | "ALL">("ALL");
 
   // Process data (Applying Heikin Ashi if selected)
   // Note: We use daily data for all ranges to ensure smooth charting,
@@ -261,6 +268,7 @@ export default function CandlestickChart({
     
     // Approximate trading days
     switch (tf) {
+      case "1D": visibleCandles = dataLength; break; // Show all fetched intraday candles
       case "1W": visibleCandles = 5; break;
       case "1M": visibleCandles = 21; break;
       case "3M": visibleCandles = 63; break;
@@ -377,6 +385,13 @@ export default function CandlestickChart({
             </div>
           </div>
 
+          {/* Optional Header Action */}
+          {headerAction && (
+            <div className="ml-4 mr-auto flex items-center">
+              {headerAction}
+            </div>
+          )}
+
           {/* Live Price Badge */}
           {realLastCandle && (
             <div className="text-right">
@@ -427,10 +442,10 @@ export default function CandlestickChart({
 
         {/* Timeframe Toggle */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {(["1W", "1M", "3M", "6M", "1Y", "ALL"] as const).map((tf) => (
+          {(["1D", "1W", "1M", "3M", "6M", "1Y", "ALL"] as const).map((tf) => (
             <button
               key={tf}
-              onClick={() => setTimeFrame(tf)}
+              onClick={() => onTimeFrameChange?.(tf)}
               className={`px-2 py-1 text-xs sm:px-3 sm:py-1 font-semibold rounded-lg border transition-all ${
                 timeFrame === tf
                   ? "bg-accent/10 border-accent/20 text-accent"

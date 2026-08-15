@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { holdings as initialHoldings, Holding } from "@/lib/mock-data";
+import { useTransactions } from "@/context/TransactionContext";
+import { Holding } from "@/lib/mock-data";
 
 export interface RealTimeHolding extends Holding {
   realTimeValue?: number;
@@ -9,7 +10,22 @@ export interface RealTimeHolding extends Holding {
 }
 
 export function usePortfolioQuotes() {
-  const [holdings, setHoldings] = useState<RealTimeHolding[]>(initialHoldings);
+  const { holdings: baseHoldings } = useTransactions();
+  // Map baseHoldings to RealTimeHolding with default zeros
+  const initialRealTimeHoldings = baseHoldings.map(h => ({
+    ...h,
+    currentPrice: 0,
+    dayChange: 0,
+    dayChangePercent: 0,
+    hasDividend: false,
+    dividendYield: 0,
+    annualDividend: 0,
+    sparklineData: [],
+    realTimeValue: 0,
+    realTimePL: 0
+  })) as unknown as RealTimeHolding[];
+
+  const [holdings, setHoldings] = useState<RealTimeHolding[]>(initialRealTimeHoldings);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -31,7 +47,13 @@ export function usePortfolioQuotes() {
         setError(null);
         
         // Extract symbols to fetch
-        const symbols = initialHoldings.map(h => h.symbol).join(",");
+        const symbols = baseHoldings.map(h => h.symbol).join(",");
+        if (!symbols) {
+           setHoldings([]);
+           setPortfolioStats({ totalValue: 0, totalCost: 0, unrealizedPL: 0, dayChange: 0, dayChangePercent: 0 });
+           setIsLoading(false);
+           return;
+        }
         
         const res = await fetch(`/api/quotes?symbols=${symbols}`);
         if (!res.ok) throw new Error("Failed to fetch quotes");
@@ -45,7 +67,7 @@ export function usePortfolioQuotes() {
           let newTotalCost = 0;
           let newDayChange = 0;
 
-          const updatedHoldings = initialHoldings.map(holding => {
+          const updatedHoldings = initialRealTimeHoldings.map(holding => {
             const quoteData = quotes.find((q: any) => q.symbol === holding.symbol);
             
             let updatedHolding = { ...holding };
@@ -104,12 +126,12 @@ export function usePortfolioQuotes() {
           setError("Unable to load real-time data. Using offline data.");
           // Fallback to offline calculation
           let totalV = 0, totalC = 0, totalDC = 0;
-          const offlineHoldings = initialHoldings.map(h => {
-             const val = h.shares * h.currentPrice;
+          const offlineHoldings = initialRealTimeHoldings.map(h => {
+             const val = h.shares * (h.currentPrice || h.avgCost);
              const cost = h.shares * h.avgCost;
-             const dc = h.shares * h.dayChange;
+             const dc = 0;
              totalV += val; totalC += cost; totalDC += dc;
-             return { ...h, realTimeValue: val, realTimePL: val - cost };
+             return { ...h, realTimeValue: val, realTimePL: val - cost, currentPrice: h.currentPrice || h.avgCost };
           });
           setHoldings(offlineHoldings);
           const prevV = totalV - totalDC;
@@ -135,7 +157,7 @@ export function usePortfolioQuotes() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, []);
+  }, [baseHoldings]); // Re-run when baseHoldings change
 
   return { holdings, portfolioStats, isLoading, error };
 }

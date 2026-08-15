@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useTransactions } from "@/context/TransactionContext";
 
 interface Props {
   isOpen: boolean;
@@ -9,22 +10,64 @@ interface Props {
 }
 
 export default function AddTransactionModal({ isOpen, onClose }: Props) {
+  const { addTransaction } = useTransactions();
+  
   const [type, setType] = useState<"BUY" | "SELL">("BUY");
   const [symbol, setSymbol] = useState("");
+  const [assetName, setAssetName] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [shares, setShares] = useState("");
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+
+  // Auto-fetch company name based on symbol
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (symbol.trim().length > 0) {
+        setIsSearching(true);
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(symbol.trim())}`);
+          if (res.ok) {
+            const data = await res.json();
+            const quotes = data.quotes || [];
+            // Find an exact match if possible, else take the first one
+            const match = quotes.find((q: any) => q.symbol.toUpperCase() === symbol.trim().toUpperCase()) || quotes[0];
+            if (match) {
+              setAssetName(match.shortname || match.longname || match.symbol);
+            } else {
+              setAssetName("");
+            }
+          }
+        } catch (e) {
+          // Quietly fail to avoid error overlay
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setAssetName("");
+      }
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timer);
+  }, [symbol]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would save the transaction
-    alert(
-      `Transaction saved!\n${type} ${shares} shares of ${symbol.toUpperCase()} at $${price} on ${date}`
-    );
+    if (!symbol || !shares || !price || !date) return;
+    
+    addTransaction({
+      type,
+      symbol: symbol.trim().toUpperCase(),
+      name: assetName || symbol.trim().toUpperCase(),
+      shares: Number(shares),
+      price: Number(price),
+      date,
+    });
+    
     onClose();
     setSymbol("");
+    setAssetName("");
     setShares("");
     setPrice("");
     setType("BUY");
@@ -88,14 +131,26 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">
               Symbol
             </label>
-            <input
-              type="text"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="e.g. NFLX"
-              required
-              className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-foreground text-sm font-mono placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                placeholder="e.g. NFLX"
+                required
+                className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-foreground text-sm font-mono placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
+              />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                   <svg className="h-4 w-4 animate-spin text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </div>
+              )}
+            </div>
+            {assetName && !isSearching && (
+              <p className="text-xs text-accent mt-1.5 ml-1 animate-fade-in-up">
+                {assetName}
+              </p>
+            )}
           </div>
 
           {/* Shares and Price */}
@@ -111,7 +166,7 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
                 placeholder="0"
                 required
                 min="0"
-                step="1"
+                step="0.000000001"
                 className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-foreground text-sm font-mono placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
               />
             </div>
@@ -126,7 +181,7 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
                 placeholder="0.00"
                 required
                 min="0"
-                step="0.01"
+                step="0.000000001"
                 className="w-full px-4 py-3 rounded-xl bg-input-bg border border-input-border text-foreground text-sm font-mono placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all"
               />
             </div>

@@ -53,7 +53,10 @@ export default function TopBar() {
       setIsLoading(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
-        if (!res.ok) throw new Error("Search failed");
+        if (!res.ok) {
+          setResults([]);
+          return;
+        }
         const data = await res.json();
         
         const mappedResults: SearchResult[] = (data.quotes || []).map((quote: any) => {
@@ -77,7 +80,7 @@ export default function TopBar() {
 
         setResults(mappedResults);
       } catch (error) {
-        console.error(error);
+        // Quietly fail to prevent Next.js error overlay in dev mode
         setResults([]);
       } finally {
         setIsLoading(false);
@@ -114,45 +117,32 @@ export default function TopBar() {
   };
 
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/95 px-4 sm:px-6 lg:px-8 backdrop-blur-xl">
-      <div className="flex flex-1 items-center justify-between">
+    <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-background/80 px-4 sm:px-6 lg:px-8 backdrop-blur-xl">
+      <div className="flex flex-1 items-center justify-between gap-4">
+        {/* Left Spacer for centering */}
+        <div className="hidden md:flex flex-1"></div>
+
         {/* Search Section */}
-        <div className="relative w-full max-w-md" ref={containerRef}>
-          <div className="relative flex items-center">
+        <div className="relative w-full max-w-xl flex-[2] md:flex-none" ref={containerRef}>
+          <div className="relative flex items-center group">
             {isLoading ? (
               <svg
-                className="absolute left-3.5 h-4 w-4 animate-spin text-accent"
+                className="absolute left-4 h-4 w-4 animate-spin text-accent"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
               >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
               <svg
-                className="absolute left-3.5 h-4 w-4 text-muted"
+                className="absolute left-4 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             )}
             <input
@@ -164,7 +154,7 @@ export default function TopBar() {
               }}
               onFocus={() => setIsOpen(true)}
               placeholder="Search via Yahoo Finance..."
-              className="w-full rounded-full border border-border bg-card-bg py-2 pl-10 pr-4 text-sm text-foreground transition-all focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-muted/70"
+              className="w-full rounded-2xl border border-border/60 bg-muted-bg/40 py-2.5 pl-11 pr-4 text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-4 focus:ring-accent/15 hover:border-border hover:bg-muted-bg/80 placeholder:text-muted/60"
             />
           </div>
 

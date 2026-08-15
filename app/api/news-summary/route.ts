@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { GoogleGenAI } from '@google/genai';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,11 +12,6 @@ export async function GET(request: Request) {
 
   try {
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
       next: { revalidate: 3600 } // Cache for 1 hour
     });
 
@@ -51,14 +47,33 @@ export async function GET(request: Request) {
       });
     }
 
-    // Take the first 3 or 4 substantial paragraphs as the "long summary"
-    const summary = paragraphs.slice(0, 4).join('\n\n');
+    // Take the first 3 or 4 substantial paragraphs as the "long summary" base
+    const baseText = paragraphs.slice(0, 4).join('\n\n');
 
-    if (!summary) {
-       return NextResponse.json({ summary: "Unable to extract article summary. The content might be behind a paywall or in a video format." });
+    if (!baseText) {
+       return NextResponse.json({ summary: "ไม่สามารถดึงข้อมูลสรุปข่าวได้ในขณะนี้ กรุณาคลิกอ่านข่าวเต็ม" });
     }
 
-    return NextResponse.json({ summary });
+    // Try to translate and summarize with Gemini if API key is present
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `Summarize the following financial news article into a concise, easy-to-read Thai summary (2-3 paragraphs max). Keep the professional tone and use appropriate financial terminology in Thai:\n\n${baseText}`;
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.5-flash', // Force recompile
+          contents: prompt,
+        });
+        return NextResponse.json({ summary: response.text });
+      } catch (aiError) {
+        console.error("AI Summarization failed, falling back to original text:", aiError);
+        // Fallback to original text if AI fails
+        return NextResponse.json({ summary: baseText });
+      }
+    }
+
+    // Fallback if no API key
+    return NextResponse.json({ summary: baseText });
     
   } catch (error: any) {
     console.error("Error fetching news summary:", error);
