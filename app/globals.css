@@ -7,9 +7,9 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
-  --card-bg: #ffffff;
-  --card-border: rgba(148, 163, 184, 0.2);
-  --card-hover: rgba(148, 163, 184, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(226, 232, 240, 0.8);
+  --card-hover: rgba(241, 245, 249, 0.6);
   --sidebar-bg: #0f172a;
   --sidebar-text: #94a3b8;
   --sidebar-active: #e2e8f0;
@@ -19,14 +19,16 @@
   --muted-bg: #f1f5f9;
   --border: #e2e8f0;
   --profit: #10b981;
+  --profit-glow: rgba(16, 185, 129, 0.15);
   --loss: #f43f5e;
+  --loss-glow: rgba(244, 63, 94, 0.15);
   --accent: #6366f1;
-  --accent-glow: rgba(99, 102, 241, 0.25);
+  --accent-glow: rgba(99, 102, 241, 0.2);
   --chart-grid: #e2e8f0;
   --tooltip-bg: #ffffff;
   --tooltip-border: #e2e8f0;
-  --modal-overlay: rgba(15, 23, 42, 0.5);
-  --input-bg: #f8fafc;
+  --modal-overlay: rgba(15, 23, 42, 0.6);
+  --input-bg: #ffffff;
   --input-border: #cbd5e1;
   --badge-buy-bg: rgba(16, 185, 129, 0.1);
   --badge-sell-bg: rgba(244, 63, 94, 0.1);
@@ -36,29 +38,31 @@
    Dark Mode Variables
    ============================================================ */
 .dark {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
-  --card-bg: rgba(30, 41, 59, 0.5);
-  --card-border: rgba(148, 163, 184, 0.1);
-  --card-hover: rgba(148, 163, 184, 0.05);
-  --sidebar-bg: #070d1a;
+  --background: #090d16;
+  --foreground: #f1f5f9;
+  --card-bg: rgba(15, 23, 42, 0.65);
+  --card-border: rgba(148, 163, 184, 0.12);
+  --card-hover: rgba(30, 41, 59, 0.4);
+  --sidebar-bg: #060911;
   --sidebar-text: #64748b;
-  --sidebar-active: #f1f5f9;
+  --sidebar-active: #f8fafc;
   --sidebar-active-bg: rgba(99, 102, 241, 0.2);
   --sidebar-accent: #818cf8;
   --muted: #94a3b8;
-  --muted-bg: rgba(30, 41, 59, 0.5);
+  --muted-bg: rgba(30, 41, 59, 0.4);
   --border: rgba(148, 163, 184, 0.12);
   --profit: #34d399;
+  --profit-glow: rgba(52, 211, 153, 0.2);
   --loss: #fb7185;
+  --loss-glow: rgba(251, 113, 133, 0.2);
   --accent: #818cf8;
-  --accent-glow: rgba(129, 140, 248, 0.3);
-  --chart-grid: rgba(148, 163, 184, 0.1);
-  --tooltip-bg: #1e293b;
-  --tooltip-border: rgba(148, 163, 184, 0.15);
-  --modal-overlay: rgba(0, 0, 0, 0.7);
-  --input-bg: #1e293b;
-  --input-border: #334155;
+  --accent-glow: rgba(129, 140, 248, 0.25);
+  --chart-grid: rgba(148, 163, 184, 0.08);
+  --tooltip-bg: #0f172a;
+  --tooltip-border: rgba(148, 163, 184, 0.2);
+  --modal-overlay: rgba(3, 7, 18, 0.75);
+  --input-bg: rgba(15, 23, 42, 0.8);
+  --input-border: #1e293b;
   --badge-buy-bg: rgba(52, 211, 153, 0.12);
   --badge-sell-bg: rgba(251, 113, 133, 0.12);
 }
@@ -81,7 +85,9 @@
   --color-muted-bg: var(--muted-bg);
   --color-border: var(--border);
   --color-profit: var(--profit);
+  --color-profit-glow: var(--profit-glow);
   --color-loss: var(--loss);
+  --color-loss-glow: var(--loss-glow);
   --color-accent: var(--accent);
   --color-accent-glow: var(--accent-glow);
   --color-chart-grid: var(--chart-grid);
@@ -92,8 +98,8 @@
   --color-input-border: var(--input-border);
   --color-badge-buy-bg: var(--badge-buy-bg);
   --color-badge-sell-bg: var(--badge-sell-bg);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 /* ============================================================
@@ -105,6 +111,12 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Font tabular numbers utility */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================
@@ -120,12 +132,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted);
-  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
+  background: rgba(148, 163, 184, 0.45);
 }
 
 /* ============================================================
@@ -135,16 +147,68 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 40px rgba(99, 102, 241, 0.15);
-  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 0 1px var(--accent-glow), 0 12px 32px -4px rgba(99, 102, 241, 0.12);
+  transform: translateY(-1px);
+}
+
+.glass-card-interactive {
+  cursor: pointer;
+}
+
+.glass-card-interactive:active {
+  transform: translateY(0) scale(0.995);
+}
+
+/* ============================================================
+   Skeleton Shimmer
+   ============================================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 25%,
+    rgba(148, 163, 184, 0.18) 37%,
+    rgba(148, 163, 184, 0.08) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite ease-in-out;
+}
+
+/* ============================================================
+   AI Shimmer Effect
+   ============================================================ */
+@keyframes ai-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.ai-gradient-badge {
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
+  background-size: 300% 300%;
+  animation: ai-shimmer 4s ease infinite;
 }
 
 /* ============================================================
@@ -164,51 +228,58 @@ body {
 .ambient-blob-1, .ambient-blob-2 {
   position: absolute;
   filter: blur(120px);
-  opacity: 0.15;
+  opacity: 0.12;
   border-radius: 50%;
-  animation: float 20s infinite ease-in-out;
+  animation: float 24s infinite ease-in-out;
 }
 
 .ambient-blob-1 {
   top: -10%;
-  left: 10%;
-  width: 50vw;
-  height: 50vw;
+  left: 15%;
+  width: 45vw;
+  height: 45vw;
   background: #6366f1;
 }
 
 .ambient-blob-2 {
-  bottom: -20%;
-  right: -10%;
-  width: 60vw;
-  height: 60vw;
-  background: #ec4899;
-  animation-delay: -10s;
+  bottom: -15%;
+  right: -5%;
+  width: 50vw;
+  height: 50vw;
+  background: #06b6d4;
+  animation-delay: -12s;
 }
 
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+  33% { transform: translate(30px, -40px) scale(1.08); }
+  66% { transform: translate(-20px, 25px) scale(0.92); }
 }
 
 /* ============================================================
    Gradient Text
    ============================================================ */
 .gradient-text {
-  background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 50%, #ec4899 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, #a855f7 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* ============================================================
-   Fade-in Animation
+   Fade-in & Scale Animations
    ============================================================ */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -216,67 +287,55 @@ body {
   }
 }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes popup {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(10px);
-  }
-  100% {
+@keyframes pulse-dot {
+  0%, 100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.2);
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
-}
-
-.animate-popup {
-  animation: popup 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-pulse-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
+  animation: fade-in-up 0.4s ease-out forwards;
 }
 
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+.stagger-5 { animation-delay: 0.20s; }
+.stagger-6 { animation-delay: 0.24s; }
 
 /* ============================================================
-   Pulse glow for active sidebar item
+   Ticker Animation
    ============================================================ */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
-  50% { box-shadow: 0 0 20px var(--accent-glow); }
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-.glow-active {
-  animation: glow-pulse 2.5s ease-in-out infinite;
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 35s linear infinite;
 }
 
-/* ============================================================
-   Recharts tooltip override
-   ============================================================ */
-.recharts-default-tooltip {
-  background: var(--tooltip-bg) !important;
-  border: 1px solid var(--tooltip-border) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
+.animate-ticker:hover {
+  animation-play-state: paused;
 }
 
 /* ============================================================
    Table hover rows
    ============================================================ */
 .table-row-hover {
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .table-row-hover:hover {
@@ -288,6 +347,6 @@ body {
    ============================================================ */
 .modal-backdrop {
   background: var(--modal-overlay);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }

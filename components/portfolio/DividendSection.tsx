@@ -2,6 +2,7 @@
 
 import { useTransactions } from "@/context/TransactionContext";
 import { formatCurrency, formatPercent, cn } from "@/lib/utils";
+import CompanyLogo from "@/components/common/CompanyLogo";
 
 export default function DividendSection() {
   const { holdings } = useTransactions();
@@ -26,7 +27,7 @@ export default function DividendSection() {
 
       <div className="space-y-4">
         {dividendHoldings.map((h) => {
-          const totalValue = h.shares * h.currentPrice;
+          const totalValue = h.shares * (h.currentPrice ?? h.avgCost ?? 0);
           const yieldOnCost = h.annualDividend ? (h.annualDividend / h.avgCost) * 100 : 0;
           const annualIncome = h.annualDividend ? h.annualDividend * h.shares : 0;
           const monthlyIncome = annualIncome / 12;
@@ -39,9 +40,7 @@ export default function DividendSection() {
               {/* Symbol Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <span className="text-sm font-bold text-accent">{h.symbol}</span>
-                  </div>
+                  <CompanyLogo symbol={h.symbol} name={h.name} size="md" />
                   <div>
                     <p className="font-semibold text-foreground">{h.name}</p>
                     <p className="text-xs text-muted">
@@ -49,6 +48,7 @@ export default function DividendSection() {
                     </p>
                   </div>
                 </div>
+
                 {h.lastDividendDate && (
                   <span className="text-xs text-muted bg-muted-bg px-3 py-1 rounded-lg">
                     Last Div: {h.lastDividendDate}

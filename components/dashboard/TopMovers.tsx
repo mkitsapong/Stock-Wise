@@ -2,6 +2,7 @@
 
 import { getTopGainers, getTopLosers } from "@/lib/mock-data";
 import { formatCurrency, formatPercent, formatSignedCurrency, cn } from "@/lib/utils";
+import CompanyLogo from "@/components/common/CompanyLogo";
 
 export default function TopMovers() {
   const gainers = getTopGainers();
@@ -24,11 +25,7 @@ export default function TopMovers() {
               className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-card-hover hover:scale-[1.01] hover:shadow-md cursor-pointer border border-transparent hover:border-profit/20 group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-profit/10 flex items-center justify-center transition-colors group-hover:bg-profit/20">
-                  <span className="text-xs font-bold text-profit">
-                    {h.symbol.slice(0, 2)}
-                  </span>
-                </div>
+                <CompanyLogo symbol={h.symbol} name={h.name} size="sm" />
                 <div>
                   <p className="text-sm font-semibold text-foreground">{h.symbol}</p>
                   <p className="text-xs text-muted truncate max-w-[120px]">{h.name}</p>
@@ -36,10 +33,10 @@ export default function TopMovers() {
               </div>
               <div className="text-right">
                 <p className="text-sm font-mono font-semibold text-foreground">
-                  {formatCurrency(h.currentPrice)}
+                  {formatCurrency(h.currentPrice ?? 0)}
                 </p>
                 <p className="text-xs font-mono text-profit">
-                  {formatSignedCurrency(h.dayChange)} ({formatPercent(h.dayChangePercent)})
+                  {formatSignedCurrency(h.dayChange ?? 0)} ({formatPercent(h.dayChangePercent ?? 0)})
                 </p>
               </div>
             </div>
@@ -65,24 +62,22 @@ export default function TopMovers() {
               className="flex items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-card-hover hover:scale-[1.01] hover:shadow-md cursor-pointer border border-transparent hover:border-loss/20 group"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-loss/10 flex items-center justify-center transition-colors group-hover:bg-loss/20">
-                  <span className="text-xs font-bold text-loss">
-                    {h.symbol.slice(0, 2)}
-                  </span>
-                </div>
+                <CompanyLogo symbol={h.symbol} name={h.name} size="sm" />
                 <div>
                   <p className="text-sm font-semibold text-foreground">{h.symbol}</p>
                   <p className="text-xs text-muted truncate max-w-[120px]">{h.name}</p>
                 </div>
               </div>
+
               <div className="text-right">
                 <p className="text-sm font-mono font-semibold text-foreground">
-                  {formatCurrency(h.currentPrice)}
+                  {formatCurrency(h.currentPrice ?? 0)}
                 </p>
                 <p className="text-xs font-mono text-loss">
-                  {formatSignedCurrency(h.dayChange)} ({formatPercent(h.dayChangePercent)})
+                  {formatSignedCurrency(h.dayChange ?? 0)} ({formatPercent(h.dayChangePercent ?? 0)})
                 </p>
               </div>
+
             </div>
           ))}
           {losers.length === 0 && (

@@ -4,6 +4,7 @@ import ThemeProvider from "./ThemeProvider";
 import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
 import TopBar from "./TopBar";
+import MarketTickerRibbon from "./MarketTickerRibbon";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar />
         <main className="flex-1 overflow-x-hidden pb-20 md:pb-0 flex flex-col">
           <TopBar />
+          <MarketTickerRibbon />
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
             {children}
           </div>
@@ -21,3 +23,4 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     </ThemeProvider>
   );
 }
+

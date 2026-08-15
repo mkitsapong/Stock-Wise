@@ -12,6 +12,8 @@ import {
   type ChartOptions,
 } from "lightweight-charts";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import CompanyLogo from "@/components/common/CompanyLogo";
+
 
 // ============================================================
 // Types
@@ -172,13 +174,14 @@ function aggregateWeekly(data: CandlestickDataPoint[]): CandlestickDataPoint[] {
   let currentWeekLow = data[0].low;
   let currentWeekDate = data[0].date;
   
-  const getWeekNumber = (dateStr: string) => {
+  const getWeekNumber = (dateStr: string | number) => {
     const d = new Date(dateStr);
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() + 4 - (d.getDay() || 7));
     const yearStart = new Date(d.getFullYear(), 0, 1);
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   };
+
   
   let currentWeek = getWeekNumber(data[0].date);
 
@@ -364,38 +367,39 @@ export default function CandlestickChart({
     <div className="glass-card p-5 sm:p-6 animate-fade-in-up opacity-0 stagger-2">
       {/* Header */}
       {(title || symbol) && (
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <div className="flex items-center gap-3">
             {symbol && (
-              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <span className="text-sm font-bold text-accent">
-                  {symbol.slice(0, 3)}
-                </span>
-              </div>
+              <CompanyLogo symbol={symbol} name={title} size="lg" />
             )}
             <div>
-              {symbol && (
-                <h3 className="text-lg font-bold text-foreground">{symbol}</h3>
-              )}
+              <div className="flex items-center gap-2">
+                {symbol && (
+                  <h3 className="text-xl font-extrabold text-foreground font-mono tracking-tight">{symbol}</h3>
+                )}
+                <span className="flex h-2 w-2 relative" title="Live Market Feed Active">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                {headerAction && (
+                  <div className="ml-2">
+                    {headerAction}
+                  </div>
+                )}
+              </div>
+
               {title && (
-                <p className="text-xs text-muted uppercase tracking-wider">
+                <p className="text-xs text-muted font-medium mt-0.5">
                   {title}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Optional Header Action */}
-          {headerAction && (
-            <div className="ml-4 mr-auto flex items-center">
-              {headerAction}
-            </div>
-          )}
-
           {/* Live Price Badge */}
           {realLastCandle && (
-            <div className="text-right">
-              <p className="text-xl font-bold font-mono text-foreground">
+            <div className="text-left sm:text-right">
+              <p className="text-2xl sm:text-3xl font-extrabold font-mono text-foreground tracking-tight tabular-nums">
                 ${realLastCandle.close.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -403,14 +407,19 @@ export default function CandlestickChart({
               </p>
               {priceChange !== null && priceChangePercent !== null && (
                 <p
-                  className={`text-xs font-mono font-semibold ${
+                  className={`text-xs font-mono font-semibold tabular-nums mt-0.5 flex items-center sm:justify-end gap-1 ${
                     priceChange >= 0 ? "text-profit" : "text-loss"
                   }`}
                 >
-                  {priceChange >= 0 ? "+" : ""}
-                  {priceChange.toFixed(2)} (
-                  {priceChange >= 0 ? "+" : ""}
-                  {priceChangePercent.toFixed(2)}%)
+                  <span>{priceChange >= 0 ? "▲" : "▼"}</span>
+                  <span>
+                    {priceChange >= 0 ? "+" : ""}
+                    {priceChange.toFixed(2)}
+                  </span>
+                  <span className="opacity-80">
+                    ({priceChange >= 0 ? "+" : ""}
+                    {priceChangePercent.toFixed(2)}%)
+                  </span>
                 </p>
               )}
             </div>
@@ -419,21 +428,25 @@ export default function CandlestickChart({
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         {/* Type Toggle */}
-        <div className="flex items-center bg-muted-bg p-1 rounded-lg">
+        <div className="flex items-center bg-muted-bg/60 p-1 rounded-xl border border-border/50">
           <button
             onClick={() => setChartType("STANDARD")}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-              chartType === "STANDARD" ? "bg-card-bg text-foreground shadow-sm" : "text-muted hover:text-foreground"
+            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              chartType === "STANDARD" 
+                ? "bg-card-bg text-foreground shadow-sm font-bold border border-border/40" 
+                : "text-muted hover:text-foreground"
             }`}
           >
             Candles
           </button>
           <button
             onClick={() => setChartType("HEIKIN_ASHI")}
-            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-              chartType === "HEIKIN_ASHI" ? "bg-card-bg text-foreground shadow-sm" : "text-muted hover:text-foreground"
+            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              chartType === "HEIKIN_ASHI" 
+                ? "bg-card-bg text-foreground shadow-sm font-bold border border-border/40" 
+                : "text-muted hover:text-foreground"
             }`}
           >
             Heikin Ashi
@@ -441,15 +454,15 @@ export default function CandlestickChart({
         </div>
 
         {/* Timeframe Toggle */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 bg-muted-bg/40 p-1 rounded-xl border border-border/40">
           {(["1D", "1W", "1M", "3M", "6M", "1Y", "ALL"] as const).map((tf) => (
             <button
               key={tf}
               onClick={() => onTimeFrameChange?.(tf)}
-              className={`px-2 py-1 text-xs sm:px-3 sm:py-1 font-semibold rounded-lg border transition-all ${
+              className={`px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
                 timeFrame === tf
-                  ? "bg-accent/10 border-accent/20 text-accent"
-                  : "bg-transparent border-border text-muted hover:text-foreground hover:border-foreground/20"
+                  ? "bg-accent text-white shadow-sm font-bold"
+                  : "text-muted hover:text-foreground hover:bg-muted-bg"
               }`}
             >
               {tf === "ALL" ? "ALL" : tf}
@@ -461,9 +474,10 @@ export default function CandlestickChart({
       {/* Chart Container */}
       <div
         ref={containerRef}
-        className="w-full rounded-xl overflow-hidden border border-border/50"
+        className="w-full rounded-2xl overflow-hidden border border-border/60 bg-card-bg/30 shadow-inner"
         style={{ height }}
       />
     </div>
   );
 }
+

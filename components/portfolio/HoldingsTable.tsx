@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { type Holding } from "@/lib/mock-data";
+import { useRouter } from "next/navigation";
 import { usePortfolioQuotes, type RealTimeHolding } from "@/hooks/usePortfolioQuotes";
 import { formatCurrency, formatPercent, formatSignedCurrency, formatNumber, cn } from "@/lib/utils";
+import CompanyLogo from "@/components/common/CompanyLogo";
 
 type SortKey = "symbol" | "shares" | "avgCost" | "currentPrice" | "totalValue" | "plPercent";
 type SortDir = "asc" | "desc";
 
 export default function HoldingsTable() {
+  const router = useRouter();
   const { holdings, isLoading } = usePortfolioQuotes();
   const [sortKey, setSortKey] = useState<SortKey>("totalValue");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -71,12 +73,12 @@ export default function HoldingsTable() {
   );
 
   const columns: { key: SortKey; label: string; align: "left" | "right" }[] = [
-    { key: "symbol", label: "Symbol", align: "left" },
+    { key: "symbol", label: "Asset", align: "left" },
     { key: "shares", label: "Shares", align: "right" },
     { key: "avgCost", label: "Avg Cost", align: "right" },
     { key: "currentPrice", label: "Price", align: "right" },
     { key: "totalValue", label: "Value", align: "right" },
-    { key: "plPercent", label: "P/L", align: "right" },
+    { key: "plPercent", label: "Unrealized P/L", align: "right" },
   ];
 
   return (
@@ -84,13 +86,13 @@ export default function HoldingsTable() {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border">
+            <tr className="border-b border-border/80 bg-muted-bg/30">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   onClick={() => handleSort(col.key)}
                   className={cn(
-                    "px-5 py-4 text-xs font-semibold uppercase tracking-wider text-muted cursor-pointer hover:text-foreground transition-colors select-none",
+                    "px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted cursor-pointer hover:text-foreground transition-colors select-none",
                     col.align === "right" ? "text-right" : "text-left"
                   )}
                 >
@@ -100,7 +102,7 @@ export default function HoldingsTable() {
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/40">
             {sorted.map((h) => {
               const currentPrice = h.currentPrice || 0;
               const totalValue = h.realTimeValue || 0;
@@ -113,45 +115,54 @@ export default function HoldingsTable() {
               return (
                 <tr
                   key={h.symbol}
-                  className="border-b border-border/50 table-row-hover"
+                  onClick={() => router.push(`/?symbol=${h.symbol}`)}
+                  className="table-row-hover cursor-pointer group"
                 >
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-accent">
-                          {h.symbol.slice(0, 2)}
-                        </span>
-                      </div>
+                      <CompanyLogo symbol={h.symbol} name={h.name} size="md" className="group-hover:scale-105 transition-transform" />
                       <div>
-                        <p className="text-sm font-semibold text-foreground">{h.symbol}</p>
-                        <p className="text-xs text-muted">{h.name}</p>
+                        <p className="text-sm font-bold font-mono text-foreground group-hover:text-accent transition-colors">
+                          {h.symbol}
+                        </p>
+                        <p className="text-xs text-muted truncate max-w-[160px] font-medium">
+                          {h.name}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground">
+                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground tabular-nums">
                     {formatNumber(h.shares)}
                   </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-muted">
+                  <td className="px-5 py-4 text-right font-mono text-sm text-muted tabular-nums">
                     {formatCurrency(h.avgCost)}
                   </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground font-semibold">
-                    {showLoader ? "..." : formatCurrency(currentPrice)}
+                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground font-bold tabular-nums">
+                    {showLoader ? (
+                      <div className="w-16 h-4 skeleton-shimmer rounded ml-auto" />
+                    ) : (
+                      formatCurrency(currentPrice)
+                    )}
                   </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground font-semibold">
-                    {showLoader ? "..." : formatCurrency(totalValue)}
+                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground font-bold tabular-nums">
+                    {showLoader ? (
+                      <div className="w-20 h-4 skeleton-shimmer rounded ml-auto" />
+                    ) : (
+                      formatCurrency(totalValue)
+                    )}
                   </td>
                   <td className="px-5 py-4 text-right">
                     {showLoader ? (
-                      <div className="text-muted text-sm">...</div>
+                      <div className="w-16 h-6 skeleton-shimmer rounded ml-auto" />
                     ) : (
-                      <>
-                        <div className={cn("font-mono text-sm font-semibold", isPositive ? "text-profit" : "text-loss")}>
+                      <div className="flex flex-col items-end">
+                        <div className={cn("font-mono text-sm font-bold tabular-nums", isPositive ? "text-profit" : "text-loss")}>
                           {formatSignedCurrency(pl)}
                         </div>
-                        <div className={cn("font-mono text-xs", isPositive ? "text-profit/70" : "text-loss/70")}>
+                        <div className={cn("font-mono text-xs font-semibold tabular-nums mt-0.5", isPositive ? "text-profit/80" : "text-loss/80")}>
                           {formatPercent(plPercent)}
                         </div>
-                      </>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -163,3 +174,4 @@ export default function HoldingsTable() {
     </div>
   );
 }
+

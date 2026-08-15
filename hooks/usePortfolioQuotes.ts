@@ -88,9 +88,11 @@ export function usePortfolioQuotes() {
             }
             
             // Calculate item-level metrics
-            const itemValue = updatedHolding.shares * updatedHolding.currentPrice;
+            const currentP = updatedHolding.currentPrice ?? updatedHolding.avgCost ?? 0;
+            const dayChg = updatedHolding.dayChange ?? 0;
+            const itemValue = updatedHolding.shares * currentP;
             const itemCost = updatedHolding.shares * updatedHolding.avgCost;
-            const itemDayChange = updatedHolding.shares * updatedHolding.dayChange;
+            const itemDayChange = updatedHolding.shares * dayChg;
             
             updatedHolding.realTimeValue = itemValue;
             updatedHolding.realTimePL = itemValue - itemCost;
@@ -102,6 +104,7 @@ export function usePortfolioQuotes() {
             
             return updatedHolding;
           });
+
           
           if (isMounted) {
             setHoldings(updatedHoldings);

@@ -4,9 +4,12 @@ import { useState } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import type { Transaction } from "@/context/TransactionContext";
 import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import CompanyLogo from "@/components/common/CompanyLogo";
+import AddTransactionModal from "./AddTransactionModal";
 
 export default function TransactionTable() {
   const { transactions, deleteTransaction } = useTransactions();
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Group transactions by date
   const grouped = transactions.reduce<Record<string, Transaction[]>>((acc, tx) => {
@@ -20,101 +23,137 @@ export default function TransactionTable() {
   );
 
   return (
-    <div className="glass-card overflow-hidden animate-fade-in-up opacity-0 stagger-2">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted">
-                Date
-              </th>
-              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted">
-                Type
-              </th>
-              <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-muted">
-                Symbol
-              </th>
-              <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted">
-                Shares
-              </th>
-              <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted">
-                Price
-              </th>
-              <th className="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-muted">
-                Total
-              </th>
-              <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-muted w-16">
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {dateGroups.map(([date, txs]) =>
-              txs.map((tx, idx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-border/50 table-row-hover"
-                >
-                  <td className="px-5 py-4 text-sm text-muted">
-                    {idx === 0
-                      ? new Date(date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : ""}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={cn(
-                        "text-xs font-semibold uppercase px-2.5 py-1 rounded-lg",
-                        tx.type === "BUY"
-                          ? "bg-badge-buy-bg text-profit"
-                          : "bg-badge-sell-bg text-loss"
-                      )}
-                    >
-                      {tx.type}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-accent">
-                          {tx.symbol.slice(0, 2)}
-                        </span>
+    <>
+      <div className="glass-card overflow-hidden animate-fade-in-up opacity-0 stagger-2">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border/80 bg-muted-bg/30">
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Date
+                </th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Type
+                </th>
+                <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Asset
+                </th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Shares
+                </th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Price
+                </th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted">
+                  Total
+                </th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted w-28">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {dateGroups.map(([date, txs]) =>
+                txs.map((tx, idx) => (
+                  <tr
+                    key={tx.id}
+                    className="table-row-hover group"
+                  >
+                    <td className="px-5 py-4 text-sm text-muted font-medium">
+                      {idx === 0
+                        ? new Date(date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : ""}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase px-2.5 py-1 rounded-md border font-mono",
+                          tx.type === "BUY"
+                            ? "bg-profit/10 text-profit border-profit/20"
+                            : "bg-loss/10 text-loss border-loss/20"
+                        )}
+                      >
+                        {tx.type}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <CompanyLogo symbol={tx.symbol} name={tx.name} size="sm" />
+                        <div>
+                          <span className="text-sm font-bold font-mono text-foreground block">{tx.symbol}</span>
+                          {tx.name && tx.name !== tx.symbol && (
+                            <span className="text-xs text-muted truncate max-w-[150px] block">{tx.name}</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">{tx.symbol}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-foreground">
-                    {formatNumber(tx.shares)}
-                  </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm text-muted">
-                    {formatCurrency(tx.price)}
-                  </td>
-                  <td className="px-5 py-4 text-right font-mono text-sm font-semibold text-foreground">
-                    {formatCurrency(tx.total)}
-                  </td>
-                  <td className="px-5 py-4 text-center">
-                    <button
-                      onClick={() => deleteTransaction(tx.id)}
-                      className="p-1.5 rounded-md text-muted hover:text-loss hover:bg-loss/10 transition-colors"
-                      title="Delete Transaction"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        
-        {transactions.length === 0 && (
-          <div className="text-center py-12">
-             <p className="text-muted">No transactions found. Add a transaction to see your history.</p>
-          </div>
-        )}
+                    </td>
+
+                    <td className="px-5 py-4 text-right font-mono text-sm text-foreground tabular-nums">
+                      {formatNumber(tx.shares)}
+                    </td>
+                    <td className="px-5 py-4 text-right font-mono text-sm text-muted tabular-nums">
+                      {formatCurrency(tx.price)}
+                    </td>
+                    <td className="px-5 py-4 text-right font-mono text-sm font-semibold text-foreground tabular-nums">
+                      {formatCurrency(tx.total)}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => setEditingTransaction(tx)}
+                          className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent/10 transition-all cursor-pointer"
+                          title="Edit Transaction"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                            <path d="m15 5 4 4"/>
+                          </svg>
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete ${tx.type} transaction for ${tx.symbol}?`)) {
+                              deleteTransaction(tx.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-muted hover:text-loss hover:bg-loss/10 transition-all cursor-pointer"
+                          title="Delete Transaction"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          
+          {transactions.length === 0 && (
+            <div className="text-center py-12">
+               <p className="text-muted">No transactions found. Add a transaction to see your history.</p>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Edit Modal */}
+      <AddTransactionModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        initialTransaction={editingTransaction}
+      />
+    </>
   );
 }
+

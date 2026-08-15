@@ -19,13 +19,22 @@ export interface Holding {
   shares: number;
   avgCost: number;
   totalInvested: number;
-  // Note: currentPrice, dailyChange, totalValue, etc., will be fetched from API
+  currentPrice?: number;
+  dayChange?: number;
+  dayChangePercent?: number;
+  sector?: string;
+  hasDividend?: boolean;
+  dividendYield?: number;
+  lastDividendDate?: string;
+  annualDividend?: number;
 }
+
 
 interface TransactionContextType {
   transactions: Transaction[];
   holdings: Holding[];
   addTransaction: (tx: Omit<Transaction, "id" | "total">) => void;
+  editTransaction: (id: string, tx: Omit<Transaction, "id" | "total">) => void;
   deleteTransaction: (id: string) => void;
 }
 
@@ -65,9 +74,24 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
     setTransactions((prev) => [newTx, ...prev]);
   };
 
+  const editTransaction = (id: string, updated: Omit<Transaction, "id" | "total">) => {
+    setTransactions((prev) =>
+      prev.map((tx) =>
+        tx.id === id
+          ? {
+              ...updated,
+              id,
+              total: updated.shares * updated.price,
+            }
+          : tx
+      )
+    );
+  };
+
   const deleteTransaction = (id: string) => {
     setTransactions((prev) => prev.filter((tx) => tx.id !== id));
   };
+
 
   // Compute holdings based on transactions
   const holdings = useMemo(() => {
@@ -123,12 +147,14 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
         transactions,
         holdings,
         addTransaction,
+        editTransaction,
         deleteTransaction,
       }}
     >
       {children}
     </TransactionContext.Provider>
   );
+
 }
 
 export function useTransactions() {

@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useTransactions } from "@/context/TransactionContext";
+import { useTransactions, type Transaction } from "@/context/TransactionContext";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  initialTransaction?: Transaction | null;
 }
 
-export default function AddTransactionModal({ isOpen, onClose }: Props) {
-  const { addTransaction } = useTransactions();
+export default function AddTransactionModal({ isOpen, onClose, initialTransaction }: Props) {
+  const { addTransaction, editTransaction } = useTransactions();
   
   const [type, setType] = useState<"BUY" | "SELL">("BUY");
   const [symbol, setSymbol] = useState("");
@@ -20,8 +21,31 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
   const [price, setPrice] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Auto-fetch company name based on symbol
+  // Sync state when initialTransaction changes or modal opens
   useEffect(() => {
+    if (initialTransaction) {
+      setType(initialTransaction.type);
+      setSymbol(initialTransaction.symbol);
+      setAssetName(initialTransaction.name || "");
+      setShares(String(initialTransaction.shares));
+      setPrice(String(initialTransaction.price));
+      setDate(initialTransaction.date);
+    } else {
+      setType("BUY");
+      setSymbol("");
+      setAssetName("");
+      setShares("");
+      setPrice("");
+      setDate(new Date().toISOString().split("T")[0]);
+    }
+  }, [initialTransaction, isOpen]);
+
+  // Auto-fetch company name based on symbol (only when adding or user changes symbol)
+  useEffect(() => {
+    if (initialTransaction && initialTransaction.symbol === symbol.trim().toUpperCase()) {
+      return;
+    }
+    
     const timer = setTimeout(async () => {
       if (symbol.trim().length > 0) {
         setIsSearching(true);
@@ -30,7 +54,6 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
           if (res.ok) {
             const data = await res.json();
             const quotes = data.quotes || [];
-            // Find an exact match if possible, else take the first one
             const match = quotes.find((q: any) => q.symbol.toUpperCase() === symbol.trim().toUpperCase()) || quotes[0];
             if (match) {
               setAssetName(match.shortname || match.longname || match.symbol);
@@ -39,38 +62,41 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
             }
           }
         } catch (e) {
-          // Quietly fail to avoid error overlay
+          // Quietly fail
         } finally {
           setIsSearching(false);
         }
       } else {
         setAssetName("");
       }
-    }, 400); // 400ms debounce
+    }, 400);
     return () => clearTimeout(timer);
-  }, [symbol]);
+  }, [symbol, initialTransaction]);
 
   if (!isOpen) return null;
+
+  const isEditing = !!initialTransaction;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!symbol || !shares || !price || !date) return;
     
-    addTransaction({
+    const payload = {
       type,
       symbol: symbol.trim().toUpperCase(),
       name: assetName || symbol.trim().toUpperCase(),
       shares: Number(shares),
       price: Number(price),
       date,
-    });
+    };
+
+    if (isEditing && initialTransaction) {
+      editTransaction(initialTransaction.id, payload);
+    } else {
+      addTransaction(payload);
+    }
     
     onClose();
-    setSymbol("");
-    setAssetName("");
-    setShares("");
-    setPrice("");
-    setType("BUY");
   };
 
   const total = Number(shares) * Number(price);
@@ -85,10 +111,24 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
       <div className="glass-card w-full max-w-md mx-4 p-6 sm:p-8 animate-fade-in-up shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">Add Transaction</h2>
+          <div className="flex items-center gap-2.5">
+            <div className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center text-white",
+              isEditing ? "bg-accent" : "bg-gradient-to-r from-accent to-purple-500"
+            )}>
+              {isEditing ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              )}
+            </div>
+            <h2 className="text-xl font-bold text-foreground">
+              {isEditing ? "Edit Transaction" : "Add Transaction"}
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all"
+            className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all cursor-pointer"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -96,6 +136,7 @@ export default function AddTransactionModal({ isOpen, onClose }: Props) {
             </svg>
           </button>
         </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Buy/Sell Toggle */}

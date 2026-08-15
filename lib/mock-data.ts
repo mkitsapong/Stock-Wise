@@ -7,15 +7,16 @@ export interface Holding {
   name: string;
   shares: number;
   avgCost: number;
-  currentPrice?: number;
-  dayChange?: number;       // dollar change today
-  dayChangePercent?: number; // percent change today
+  currentPrice: number;
+  dayChange: number;       // dollar change today
+  dayChangePercent: number; // percent change today
   sector: string;
   hasDividend?: boolean;
   dividendYield?: number;   // annual yield %
   lastDividendDate?: string;
   annualDividend?: number;  // per share
 }
+
 
 export interface WatchlistItem {
   symbol: string;

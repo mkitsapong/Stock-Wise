@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import CompanyLogo from "@/components/common/CompanyLogo";
 
 type AssetType = "US_STOCK" | "TH_STOCK" | "MUTUAL_FUND" | "OTHER";
 
@@ -21,6 +22,24 @@ export default function TopBar() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Global Ctrl+K or Cmd+K shortcut
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setIsOpen(true);
+      }
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        inputRef.current?.blur();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -37,13 +56,13 @@ export default function TopBar() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 300);
+    }, 280);
     return () => clearTimeout(timer);
   }, [query]);
 
   // Fetch results when debounced query changes
   useEffect(() => {
-    if (!debouncedQuery) {
+    if (!debouncedQuery.trim()) {
       setResults([]);
       setIsLoading(false);
       return;
@@ -64,7 +83,7 @@ export default function TopBar() {
           
           if (quote.quoteType === "MUTUALFUND") {
             type = "MUTUAL_FUND";
-          } else if (quote.exchange === "SET" || quote.symbol.endsWith(".BK")) {
+          } else if (quote.exchange === "SET" || quote.symbol?.endsWith(".BK")) {
             type = "TH_STOCK";
           } else if (quote.quoteType === "EQUITY" || quote.quoteType === "ETF") {
             type = "US_STOCK";
@@ -80,7 +99,6 @@ export default function TopBar() {
 
         setResults(mappedResults);
       } catch (error) {
-        // Quietly fail to prevent Next.js error overlay in dev mode
         setResults([]);
       } finally {
         setIsLoading(false);
@@ -112,22 +130,26 @@ export default function TopBar() {
       case "MUTUAL_FUND":
         return "Fund";
       default:
-        return "Other";
+        return "Asset";
     }
   };
 
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border bg-background/80 px-4 sm:px-6 lg:px-8 backdrop-blur-xl">
+    <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border/80 bg-background/85 px-4 sm:px-6 lg:px-8 backdrop-blur-xl transition-all">
       <div className="flex flex-1 items-center justify-between gap-4">
-        {/* Left Spacer for centering */}
-        <div className="hidden md:flex flex-1"></div>
+        {/* Left Spacer */}
+        <div className="hidden md:flex flex-1 items-center gap-2">
+          <span className="text-xs font-semibold text-muted/80 tracking-wide uppercase">
+            StockWise Pro
+          </span>
+        </div>
 
         {/* Search Section */}
         <div className="relative w-full max-w-xl flex-[2] md:flex-none" ref={containerRef}>
           <div className="relative flex items-center group">
             {isLoading ? (
               <svg
-                className="absolute left-4 h-4 w-4 animate-spin text-accent"
+                className="absolute left-3.5 h-4 w-4 animate-spin text-accent"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -137,7 +159,7 @@ export default function TopBar() {
               </svg>
             ) : (
               <svg
-                className="absolute left-4 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
+                className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -146,6 +168,7 @@ export default function TopBar() {
               </svg>
             )}
             <input
+              ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => {
@@ -153,20 +176,36 @@ export default function TopBar() {
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              placeholder="Search via Yahoo Finance..."
-              className="w-full rounded-2xl border border-border/60 bg-muted-bg/40 py-2.5 pl-11 pr-4 text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-4 focus:ring-accent/15 hover:border-border hover:bg-muted-bg/80 placeholder:text-muted/60"
+              placeholder="Search stocks, indices, funds (e.g. AAPL, NVDA, PTT.BK)..."
+              className="w-full rounded-xl border border-border/80 bg-card-bg/60 py-2 pl-10 pr-16 text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-border placeholder:text-muted/60"
             />
+            <div className="absolute right-2.5 flex items-center gap-1.5">
+              {query && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    setResults([]);
+                  }}
+                  className="p-1 text-muted hover:text-foreground text-xs rounded-md"
+                >
+                  ✕
+                </button>
+              )}
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted bg-muted-bg/80 border border-border/60 rounded">
+                ⌘K
+              </kbd>
+            </div>
           </div>
 
           {/* Autocomplete Dropdown */}
           {isOpen && query.length > 0 && (
-            <div className="absolute left-0 mt-2 w-full origin-top-left rounded-xl border border-border bg-card-bg py-2 shadow-xl animate-fade-in-up">
+            <div className="absolute left-0 mt-2 w-full origin-top-left rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl py-2 shadow-2xl animate-fade-in-up z-50 overflow-hidden">
               {results.length > 0 ? (
-                <ul className="max-h-80 overflow-y-auto scrollbar-thin">
+                <ul className="max-h-80 overflow-y-auto scrollbar-thin divide-y divide-border/30">
                   {results.map((asset) => (
                     <li
                       key={asset.symbol}
-                      className="cursor-pointer px-4 py-2 hover:bg-card-hover transition-colors"
+                      className="cursor-pointer px-4 py-2.5 hover:bg-accent/10 transition-colors group/item"
                       onClick={() => {
                         setQuery(asset.symbol);
                         setIsOpen(false);
@@ -174,18 +213,21 @@ export default function TopBar() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-foreground text-sm flex items-center gap-2">
-                            {asset.symbol}
-                            {asset.exchange && (
-                              <span className="text-[10px] text-muted font-normal uppercase">
-                                {asset.exchange}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-xs text-muted truncate max-w-[200px]">
-                            {asset.name}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <CompanyLogo symbol={asset.symbol} name={asset.name} size="sm" />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground text-sm font-mono flex items-center gap-2 group-hover/item:text-accent transition-colors">
+                              {asset.symbol}
+                              {asset.exchange && (
+                                <span className="text-[10px] text-muted font-normal uppercase bg-muted-bg px-1.5 py-0.2 rounded font-sans">
+                                  {asset.exchange}
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-xs text-muted truncate max-w-[260px]">
+                              {asset.name}
+                            </span>
+                          </div>
                         </div>
                         <span
                           className={cn(
@@ -200,35 +242,28 @@ export default function TopBar() {
                   ))}
                 </ul>
               ) : !isLoading ? (
-                <div className="px-4 py-3 text-sm text-muted text-center">
-                  No results found for "{query}"
+                <div className="px-4 py-4 text-sm text-muted text-center">
+                  No assets found for <span className="font-semibold text-foreground">"{query}"</span>
                 </div>
               ) : (
-                <div className="px-4 py-3 text-sm text-muted text-center">
-                  Searching...
+                <div className="px-4 py-4 text-sm text-muted text-center flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                  Searching Yahoo Finance...
                 </div>
               )}
             </div>
           )}
         </div>
+
         
-        {/* User Profile / Notifications (Placeholder) */}
-        <div className="flex items-center gap-4 ml-4">
-           <button className="relative p-2 text-muted hover:text-foreground transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-              <span className="absolute top-1 right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-              </span>
-           </button>
-           <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-semibold text-xs shadow-md">
-             JD
+        {/* User Profile / Quick Stats */}
+        <div className="flex items-center gap-3 ml-4">
+           <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
+             SW
            </div>
         </div>
       </div>
     </div>
   );
 }
+

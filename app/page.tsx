@@ -1,8 +1,9 @@
 import CandlestickSection from "@/components/dashboard/CandlestickSection";
+import HeroCards from "@/components/dashboard/HeroCards";
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-10 pb-10">
+    <div className="space-y-8 pb-10">
       {/* Page Header */}
       <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -10,7 +11,7 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p className="text-sm text-muted mt-1 font-medium">
-            Market Action · {new Date().toLocaleDateString("en-US", {
+            Live Market Overview · {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
               month: "long",
@@ -20,9 +21,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Candlestick Chart */}
+      {/* Hero Stats */}
+      <HeroCards />
+
+      {/* Candlestick Chart & Analysis */}
       <CandlestickSection />
     </div>
   );
 }
+
 
