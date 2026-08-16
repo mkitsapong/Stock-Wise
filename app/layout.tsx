@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
+import { AuthProvider } from "@/context/AuthContext";
+import { WatchlistProvider } from "@/context/WatchlistContext";
+import { TransactionProvider } from "@/context/TransactionContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
+import AuthModal from "@/components/auth/AuthModal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -14,10 +19,6 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
 });
-
-import { WatchlistProvider } from "@/context/WatchlistContext";
-import { TransactionProvider } from "@/context/TransactionContext";
-import { CurrencyProvider } from "@/context/CurrencyContext";
 
 export const metadata: Metadata = {
   title: "StockWise — Smart Portfolio Tracker",
@@ -33,19 +34,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-full">
-        <CurrencyProvider>
-          <TransactionProvider>
-            <WatchlistProvider>
-              <div className="ambient-bg">
-                <div className="ambient-blob-1"></div>
-                <div className="ambient-blob-2"></div>
-              </div>
-              <AppShell>{children}</AppShell>
-            </WatchlistProvider>
-          </TransactionProvider>
-        </CurrencyProvider>
+        <AuthProvider>
+          <CurrencyProvider>
+            <TransactionProvider>
+              <WatchlistProvider>
+                <div className="ambient-bg">
+                  <div className="ambient-blob-1"></div>
+                  <div className="ambient-blob-2"></div>
+                </div>
+                <AppShell>{children}</AppShell>
+                <AuthModal />
+              </WatchlistProvider>
+            </TransactionProvider>
+          </CurrencyProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
-
