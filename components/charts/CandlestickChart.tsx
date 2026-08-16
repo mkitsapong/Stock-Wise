@@ -255,16 +255,42 @@ export default function CandlestickChart({
     return result;
   }, [data, chartType]);
 
-  // Transform for Lightweight Charts
-  const chartData: CandlestickData[] = useMemo(() => 
-    processedData.map((d) => ({
-      time: d.date as CandlestickData["time"],
-      open: d.open,
-      high: d.high,
-      low: d.low,
-      close: d.close,
-    })),
-  [processedData]);
+  // Transform for Lightweight Charts with strict deduplication & ascending time order
+  const chartData: CandlestickData[] = useMemo(() => {
+    if (!processedData || processedData.length === 0) return [];
+
+    const map = new Map<string | number, CandlestickData>();
+    for (const d of processedData) {
+      if (!d || d.date === undefined || d.date === null) continue;
+      map.set(d.date, {
+        time: d.date as CandlestickData["time"],
+        open: d.open,
+        high: d.high,
+        low: d.low,
+        close: d.close,
+      });
+    }
+
+    const sorted = Array.from(map.values()).sort((a, b) => {
+      const tA = typeof a.time === "string" ? new Date(a.time).getTime() : Number(a.time);
+      const tB = typeof b.time === "string" ? new Date(b.time).getTime() : Number(b.time);
+      return tA - tB;
+    });
+
+    // Safeguard: Ensure each candle's timestamp is strictly greater than the previous
+    const strictlyAscending: CandlestickData[] = [];
+    let lastTime: number | null = null;
+
+    for (const item of sorted) {
+      const t = typeof item.time === "string" ? new Date(item.time).getTime() : Number(item.time);
+      if (lastTime === null || t > lastTime) {
+        strictlyAscending.push(item);
+        lastTime = t;
+      }
+    }
+
+    return strictlyAscending;
+  }, [processedData]);
 
   // Helper to set visible range based on timeframe
   const applyTimeFrameRange = useCallback((chart: IChartApi, tf: string, dataLength: number) => {
@@ -314,10 +340,14 @@ export default function CandlestickChart({
     const colors = isDark ? CANDLE_COLORS.dark : CANDLE_COLORS.light;
     const series = chart.addSeries(CandlestickSeries, colors);
 
-    series.setData(chartData);
-
-    // Initial fit based on timeframe
-    applyTimeFrameRange(chart, timeFrame, chartData.length);
+    if (chartData.length > 0) {
+      try {
+        series.setData(chartData);
+        applyTimeFrameRange(chart, timeFrame, chartData.length);
+      } catch (err) {
+        console.error("CandlestickChart initial setData error:", err);
+      }
+    }
 
     chartRef.current = chart;
     seriesRef.current = series;
@@ -351,8 +381,14 @@ export default function CandlestickChart({
   // Update data & range when state changes
   useEffect(() => {
     if (!seriesRef.current || !chartRef.current) return;
-    seriesRef.current.setData(chartData);
-    applyTimeFrameRange(chartRef.current, timeFrame, chartData.length);
+    if (chartData.length > 0) {
+      try {
+        seriesRef.current.setData(chartData);
+        applyTimeFrameRange(chartRef.current, timeFrame, chartData.length);
+      } catch (err) {
+        console.error("CandlestickChart update setData error:", err);
+      }
+    }
   }, [chartData, timeFrame, applyTimeFrameRange]);
 
   // Compute summary from actual underlying data (not HA data, to show real prices)

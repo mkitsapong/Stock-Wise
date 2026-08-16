@@ -77,13 +77,27 @@ export async function GET(request: Request) {
       }
     }
 
+    // Deduplicate and strictly sort ascending by timestamp
+    const uniqueMap = new Map<string | number, typeof formattedData[0]>();
+    for (const item of formattedData) {
+      if (item.date !== undefined && item.date !== null) {
+        uniqueMap.set(item.date, item);
+      }
+    }
+
+    const cleanData = Array.from(uniqueMap.values()).sort((a, b) => {
+      const tA = typeof a.date === 'string' ? new Date(a.date).getTime() : Number(a.date);
+      const tB = typeof b.date === 'string' ? new Date(b.date).getTime() : Number(b.date);
+      return tA - tB;
+    });
+
     return NextResponse.json({
       meta: {
         symbol: meta.symbol,
         longName: meta.longName || meta.shortName || meta.symbol,
         currency: meta.currency,
       },
-      data: formattedData
+      data: cleanData
     });
   } catch (error: any) {
     console.error('Chart API Error:', error);
