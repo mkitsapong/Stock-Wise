@@ -11,13 +11,21 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getGrowthData } from "@/lib/mock-data";
-import { formatCurrency, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { cn } from "@/lib/utils";
 
 type Period = "1M" | "6M" | "YTD";
 
 export default function PortfolioChart() {
   const [period, setPeriod] = useState<Period>("6M");
-  const data = getGrowthData(period);
+  const { formatCurrency, currency, exchangeRate, currencySymbol } = useCurrency();
+  const rawData = getGrowthData(period);
+
+  // Convert values if currency is THB
+  const data = rawData.map((d) => ({
+    ...d,
+    displayValue: currency === "THB" ? d.value * exchangeRate : d.value,
+  }));
 
   return (
     <div className="glass-card p-4 animate-fade-in-up opacity-0 stagger-3">
@@ -77,17 +85,21 @@ export default function PortfolioChart() {
               axisLine={false}
               tickLine={false}
               tick={{ fill: "var(--muted)", fontSize: 11 }}
-              tickFormatter={(val: number) => `$${(val / 1000).toFixed(0)}k`}
-              width={50}
+              tickFormatter={(val: number) => {
+                if (val >= 1000000) return `${currencySymbol}${(val / 1000000).toFixed(1)}M`;
+                return `${currencySymbol}${(val / 1000).toFixed(0)}k`;
+              }}
+              width={56}
             />
             <Tooltip
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
+                const origVal = payload[0].payload?.value;
                 return (
                   <div className="glass-card !rounded-xl px-4 py-3 shadow-2xl">
                     <p className="text-xs text-muted mb-1">{label}</p>
                     <p className="text-sm font-bold font-mono text-foreground">
-                      {formatCurrency(payload[0].value as number)}
+                      {formatCurrency(origVal as number)}
                     </p>
                   </div>
                 );
@@ -95,7 +107,7 @@ export default function PortfolioChart() {
             />
             <Area
               type="monotone"
-              dataKey="value"
+              dataKey="displayValue"
               stroke="var(--accent)"
               strokeWidth={2.5}
               fill="url(#portfolioGradient)"

@@ -1,11 +1,21 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { getSectorAllocation, SECTOR_COLORS } from "@/lib/mock-data";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import { getSectorAllocation, SECTOR_COLORS as MOCK_COLORS } from "@/lib/mock-data";
+import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
+import { calculateSectorBreakdown } from "@/lib/diversification";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatPercent } from "@/lib/utils";
 
 export default function AllocationChart() {
-  const data = getSectorAllocation();
+  const { holdings } = usePortfolioQuotes();
+  const { formatCurrency } = useCurrency();
+  
+  const liveSectors = calculateSectorBreakdown(holdings);
+  const data = liveSectors.length > 0
+    ? liveSectors.map((s) => ({ name: s.name, value: s.value, color: s.color }))
+    : getSectorAllocation().map((s) => ({ name: s.name, value: s.value, color: MOCK_COLORS[s.name] || "#6366f1" }));
+
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   const FALLBACK_COLORS = ["#6366f1", "#06b6d4", "#f59e0b", "#8b5cf6", "#10b981", "#ec4899"];
@@ -34,7 +44,7 @@ export default function AllocationChart() {
               {data.map((entry, index) => (
                 <Cell
                   key={entry.name}
-                  fill={SECTOR_COLORS[entry.name] || FALLBACK_COLORS[index % FALLBACK_COLORS.length]}
+                  fill={entry.color || FALLBACK_COLORS[index % FALLBACK_COLORS.length]}
                 />
               ))}
             </Pie>
@@ -68,7 +78,7 @@ export default function AllocationChart() {
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{
                     backgroundColor:
-                      SECTOR_COLORS[item.name] || FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+                      item.color || FALLBACK_COLORS[index % FALLBACK_COLORS.length],
                   }}
                 />
                 <span className="text-foreground/80">{item.name}</span>

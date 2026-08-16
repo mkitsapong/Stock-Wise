@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import { Holding } from "@/lib/mock-data";
+import { enrichHoldingWithDividends } from "@/lib/dividends";
 
 export interface RealTimeHolding extends Holding {
   realTimeValue?: number;
@@ -11,19 +12,19 @@ export interface RealTimeHolding extends Holding {
 
 export function usePortfolioQuotes() {
   const { holdings: baseHoldings } = useTransactions();
-  // Map baseHoldings to RealTimeHolding with default zeros
-  const initialRealTimeHoldings = baseHoldings.map(h => ({
-    ...h,
-    currentPrice: 0,
-    dayChange: 0,
-    dayChangePercent: 0,
-    hasDividend: false,
-    dividendYield: 0,
-    annualDividend: 0,
-    sparklineData: [],
-    realTimeValue: 0,
-    realTimePL: 0
-  })) as unknown as RealTimeHolding[];
+  // Map baseHoldings to RealTimeHolding with default values and dividend data
+  const initialRealTimeHoldings = baseHoldings.map((h) => {
+    const raw: RealTimeHolding = {
+      ...h,
+      sector: h.sector || "Other",
+      currentPrice: h.avgCost || 0,
+      dayChange: 0,
+      dayChangePercent: 0,
+      realTimeValue: h.shares * (h.avgCost || 0),
+      realTimePL: 0,
+    };
+    return enrichHoldingWithDividends(raw);
+  }) as unknown as RealTimeHolding[];
 
   const [holdings, setHoldings] = useState<RealTimeHolding[]>(initialRealTimeHoldings);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +103,7 @@ export function usePortfolioQuotes() {
             newTotalCost += itemCost;
             newDayChange += itemDayChange;
             
-            return updatedHolding;
+            return enrichHoldingWithDividends(updatedHolding);
           });
 
           

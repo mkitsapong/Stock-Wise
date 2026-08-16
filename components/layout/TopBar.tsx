@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import CompanyLogo from "@/components/common/CompanyLogo";
+import CurrencySwitcher from "@/components/common/CurrencySwitcher";
 
 type AssetType = "US_STOCK" | "TH_STOCK" | "MUTUAL_FUND" | "OTHER";
 
@@ -256,8 +257,9 @@ export default function TopBar() {
         </div>
 
         
-        {/* User Profile / Quick Stats */}
-        <div className="flex items-center gap-3 ml-4">
+        {/* Currency Switcher & User Profile */}
+        <div className="flex items-center gap-3 ml-2 sm:ml-4">
+           <CurrencySwitcher />
            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
              SW
            </div>

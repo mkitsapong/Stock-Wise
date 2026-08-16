@@ -6,16 +6,31 @@ export function cn(...classes: (string | false | null | undefined)[]): string {
 }
 
 /**
- * Format a number as USD currency with commas and 2 decimal places
- * e.g. 1234.5 → "$1,234.50"
+ * Format a number as currency (USD default or THB with custom exchange rate)
+ * e.g. 1234.5, "USD" → "$1,234.50"
+ * e.g. 1234.5, "THB", 33.10 → "฿40,861.95"
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(
+  value: number,
+  currency: "USD" | "THB" = "USD",
+  exchangeRate = 1
+): string {
+  if (typeof value !== "number" || isNaN(value)) return "-";
+  const converted = currency === "THB" ? value * exchangeRate : value;
+  
+  if (currency === "THB") {
+    return `฿${new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(converted)}`;
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(converted);
 }
 
 /**
@@ -41,7 +56,13 @@ export function formatNumber(value: number, maxDecimals = 9): string {
  * Format a signed currency value with + prefix for positive
  * e.g. 1234.5 → "+$1,234.50", -500 → "-$500.00"
  */
-export function formatSignedCurrency(value: number): string {
+export function formatSignedCurrency(
+  value: number,
+  currency: "USD" | "THB" = "USD",
+  exchangeRate = 1
+): string {
+  if (typeof value !== "number" || isNaN(value)) return "-";
   const sign = value >= 0 ? "+" : "";
-  return `${sign}${formatCurrency(value)}`;
+  return `${sign}${formatCurrency(value, currency, exchangeRate)}`;
 }
+

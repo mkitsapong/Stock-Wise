@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatCurrency, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { cn } from "@/lib/utils";
 import NewsReaderModal from "./NewsReaderModal";
 
 interface NewsItem {
@@ -22,6 +23,7 @@ const BAD_KEYWORDS = ["downgrade", "miss", "drop", "sell", "lawsuit", "cancel", 
 const CAUTION_KEYWORDS = ["beware", "warning", "volatile", "ahead", "wait", "watch", "report", "uncertain", "fed", "inflation"];
 
 export default function AIInsights({ symbol, chartData }: AIInsightsProps) {
+  const { formatCurrency } = useCurrency();
   const [goodNews, setGoodNews] = useState<NewsItem[]>([]);
   const [badNews, setBadNews] = useState<NewsItem[]>([]);
   const [cautions, setCautions] = useState<string[]>([]);

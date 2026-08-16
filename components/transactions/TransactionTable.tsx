@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useTransactions } from "@/context/TransactionContext";
 import type { Transaction } from "@/context/TransactionContext";
-import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatNumber, cn } from "@/lib/utils";
 import CompanyLogo from "@/components/common/CompanyLogo";
 import AddTransactionModal from "./AddTransactionModal";
 
 export default function TransactionTable() {
   const { transactions, deleteTransaction } = useTransactions();
+  const { formatCurrency } = useCurrency();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Group transactions by date

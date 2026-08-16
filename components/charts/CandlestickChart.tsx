@@ -12,6 +12,7 @@ import {
   type ChartOptions,
 } from "lightweight-charts";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import { useCurrency } from "@/context/CurrencyContext";
 import CompanyLogo from "@/components/common/CompanyLogo";
 
 
@@ -238,6 +239,7 @@ export default function CandlestickChart({
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const { theme } = useTheme();
+  const { formatCurrency, currency, exchangeRate } = useCurrency();
   const isDark = theme === "dark";
 
   const [chartType, setChartType] = useState<"STANDARD" | "HEIKIN_ASHI">("HEIKIN_ASHI");
@@ -400,11 +402,13 @@ export default function CandlestickChart({
           {realLastCandle && (
             <div className="text-left sm:text-right">
               <p className="text-2xl sm:text-3xl font-extrabold font-mono text-foreground tracking-tight tabular-nums">
-                ${realLastCandle.close.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatCurrency(realLastCandle.close)}
               </p>
+              {currency === "THB" && (
+                <p className="text-[11px] font-mono text-muted/80">
+                  USD: ${realLastCandle.close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              )}
               {priceChange !== null && priceChangePercent !== null && (
                 <p
                   className={`text-xs font-mono font-semibold tabular-nums mt-0.5 flex items-center sm:justify-end gap-1 ${
@@ -414,7 +418,7 @@ export default function CandlestickChart({
                   <span>{priceChange >= 0 ? "▲" : "▼"}</span>
                   <span>
                     {priceChange >= 0 ? "+" : ""}
-                    {priceChange.toFixed(2)}
+                    {currency === "THB" ? (priceChange * exchangeRate).toFixed(2) : priceChange.toFixed(2)}
                   </span>
                   <span className="opacity-80">
                     ({priceChange >= 0 ? "+" : ""}

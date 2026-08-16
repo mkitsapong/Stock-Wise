@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
-import { formatCurrency, formatPercent, formatSignedCurrency, cn } from "@/lib/utils";
+import { formatPercent, cn } from "@/lib/utils";
 import { useWatchlist } from "@/context/WatchlistContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useRouter } from "next/navigation";
 import CompanyLogo from "@/components/common/CompanyLogo";
 
@@ -15,6 +16,7 @@ interface Props {
 export default function WatchlistRow({ item, index }: Props) {
   const router = useRouter();
   const { removeFromWatchlist, updateTargetPrice } = useWatchlist();
+  const { formatCurrency, formatSignedCurrency } = useCurrency();
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const [newTarget, setNewTarget] = useState(item.targetBuyPrice ? String(item.targetBuyPrice) : "");
 

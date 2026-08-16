@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatCurrency, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { cn } from "@/lib/utils";
 
 interface TechnicalAnalysisProps {
   data: any[];
@@ -9,6 +10,7 @@ interface TechnicalAnalysisProps {
 }
 
 export default function TechnicalAnalysis({ data, isLoading }: TechnicalAnalysisProps) {
+  const { formatCurrency } = useCurrency();
   // Calculate Standard Pivot Points based on the last 20 trading days
   const pivots = useMemo(() => {
     if (!data || data.length < 20) return null;
@@ -132,6 +134,7 @@ function LevelCard({
   type: "support" | "resistance";
   currentPrice: number;
 }) {
+  const { formatCurrency } = useCurrency();
   const isResistance = type === "resistance";
   const isPassed = isResistance ? currentPrice >= value : currentPrice <= value;
   

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTransactions, type Transaction } from "@/context/TransactionContext";
+import { useCurrency } from "@/context/CurrencyContext";
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function AddTransactionModal({ isOpen, onClose, initialTransaction }: Props) {
   const { addTransaction, editTransaction } = useTransactions();
+  const { formatCurrency, currency, exchangeRate, currencySymbol } = useCurrency();
   
   const [type, setType] = useState<"BUY" | "SELL">("BUY");
   const [symbol, setSymbol] = useState("");
@@ -213,7 +215,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">
-                Price ($)
+                Price ($ USD)
               </label>
               <input
                 type="number"
@@ -246,10 +248,22 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
           {shares && price && (
             <div className="p-4 rounded-xl bg-muted-bg/50 border border-border/50">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">Total</span>
-                <span className="text-xl font-bold font-mono text-foreground">
-                  ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted block">Total Investment</span>
+                  <span className="text-xl font-bold font-mono text-foreground">
+                    {formatCurrency(total)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-muted block font-mono">
+                    {currency === "THB" ? "USD Equivalent" : "THB Equivalent"}
+                  </span>
+                  <span className="text-sm font-mono font-semibold text-muted/90">
+                    {currency === "THB"
+                      ? `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : `฿${(total * exchangeRate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  </span>
+                </div>
               </div>
             </div>
           )}

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePortfolioQuotes, type RealTimeHolding } from "@/hooks/usePortfolioQuotes";
-import { formatCurrency, formatPercent, formatSignedCurrency, formatNumber, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatPercent, formatNumber, cn } from "@/lib/utils";
 import CompanyLogo from "@/components/common/CompanyLogo";
 
 type SortKey = "symbol" | "shares" | "avgCost" | "currentPrice" | "totalValue" | "plPercent";
@@ -12,6 +13,7 @@ type SortDir = "asc" | "desc";
 export default function HoldingsTable() {
   const router = useRouter();
   const { holdings, isLoading } = usePortfolioQuotes();
+  const { formatCurrency, formatSignedCurrency } = useCurrency();
   const [sortKey, setSortKey] = useState<SortKey>("totalValue");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 

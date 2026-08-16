@@ -1,10 +1,12 @@
 "use client";
 
 import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
-import { formatCurrency, formatSignedCurrency, formatPercent, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatPercent, cn } from "@/lib/utils";
 
 export default function HeroCards() {
   const { portfolioStats: stats, isLoading } = usePortfolioQuotes();
+  const { formatCurrency, formatSignedCurrency } = useCurrency();
 
   const cards = [
     {

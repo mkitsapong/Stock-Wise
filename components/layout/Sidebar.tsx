@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./ThemeProvider";
+import { useCurrency } from "@/context/CurrencyContext";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -59,6 +60,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { currency, toggleCurrency, exchangeRate } = useCurrency();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -114,6 +116,25 @@ export default function Sidebar() {
 
       {/* Bottom Controls */}
       <div className="p-3 border-t border-border flex flex-col gap-2">
+        {/* Currency Toggle */}
+        <button
+          onClick={toggleCurrency}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full group cursor-pointer"
+          title={`Switch currency (Current: ${currency})`}
+        >
+          <div className="w-5 h-5 rounded-md bg-muted-bg border border-border/80 flex items-center justify-center font-mono font-bold text-xs text-accent group-hover:border-accent">
+            {currency === "USD" ? "$" : "฿"}
+          </div>
+          {!collapsed && (
+            <div className="flex items-center justify-between flex-1 text-xs">
+              <span>{currency === "USD" ? "Currency: USD ($)" : "Currency: THB (฿)"}</span>
+              <span className="font-mono text-[10px] text-muted">
+                {currency === "USD" ? `฿${exchangeRate.toFixed(1)}` : "$1.00"}
+              </span>
+            </div>
+          )}
+        </button>
+
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}

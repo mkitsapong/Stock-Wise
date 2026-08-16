@@ -1,10 +1,12 @@
 "use client";
 
 import { getTopGainers, getTopLosers } from "@/lib/mock-data";
-import { formatCurrency, formatPercent, formatSignedCurrency, cn } from "@/lib/utils";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatPercent, cn } from "@/lib/utils";
 import CompanyLogo from "@/components/common/CompanyLogo";
 
 export default function TopMovers() {
+  const { formatCurrency, formatSignedCurrency } = useCurrency();
   const gainers = getTopGainers();
   const losers = getTopLosers();
 
