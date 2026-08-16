@@ -9,7 +9,7 @@ import CompanyLogo from "@/components/common/CompanyLogo";
 import AddTransactionModal from "./AddTransactionModal";
 
 export default function TransactionTable() {
-  const { transactions, deleteTransaction } = useTransactions();
+  const { transactions, deleteTransaction, portfolios, activePortfolioId } = useTransactions();
   const { formatCurrency } = useCurrency();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
@@ -23,6 +23,11 @@ export default function TransactionTable() {
   const dateGroups = Object.entries(grouped).sort(
     ([a], [b]) => new Date(b).getTime() - new Date(a).getTime()
   );
+
+  const getPortfolioInfo = (portfolioId?: string) => {
+    const p = portfolios.find((item) => item.id === (portfolioId || "growth"));
+    return p || { name: "Growth", color: "#10b981" };
+  };
 
   return (
     <>
@@ -40,6 +45,11 @@ export default function TransactionTable() {
                 <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted">
                   Asset
                 </th>
+                {activePortfolioId === "ALL" && (
+                  <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-muted">
+                    Portfolio
+                  </th>
+                )}
                 <th className="px-5 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-muted">
                   Shares
                 </th>
@@ -56,94 +66,120 @@ export default function TransactionTable() {
             </thead>
             <tbody className="divide-y divide-border/40">
               {dateGroups.map(([date, txs]) =>
-                txs.map((tx, idx) => (
-                  <tr
-                    key={tx.id}
-                    className="table-row-hover group"
-                  >
-                    <td className="px-5 py-4 text-sm text-muted font-medium">
-                      {idx === 0
-                        ? new Date(date).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        : ""}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={cn(
-                          "text-[10px] font-bold uppercase px-2.5 py-1 rounded-md border font-mono",
-                          tx.type === "BUY"
-                            ? "bg-profit/10 text-profit border-profit/20"
-                            : "bg-loss/10 text-loss border-loss/20"
-                        )}
-                      >
-                        {tx.type}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <CompanyLogo symbol={tx.symbol} name={tx.name} size="sm" />
-                        <div>
-                          <span className="text-sm font-bold font-mono text-foreground block">{tx.symbol}</span>
-                          {tx.name && tx.name !== tx.symbol && (
-                            <span className="text-xs text-muted truncate max-w-[150px] block">{tx.name}</span>
+                txs.map((tx, idx) => {
+                  const portInfo = getPortfolioInfo(tx.portfolioId);
+
+                  return (
+                    <tr key={tx.id} className="table-row-hover group">
+                      <td className="px-5 py-4 text-sm text-muted font-medium">
+                        {idx === 0
+                          ? new Date(date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : ""}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold uppercase px-2.5 py-1 rounded-md border font-mono",
+                            tx.type === "BUY"
+                              ? "bg-profit/10 text-profit border-profit/20"
+                              : "bg-loss/10 text-loss border-loss/20"
                           )}
+                        >
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <CompanyLogo symbol={tx.symbol} name={tx.name} size="sm" />
+                          <div>
+                            <span className="text-sm font-bold font-mono text-foreground block">
+                              {tx.symbol}
+                            </span>
+                            {tx.name && tx.name !== tx.symbol && (
+                              <span className="text-xs text-muted truncate max-w-[150px] block">
+                                {tx.name}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="px-5 py-4 text-right font-mono text-sm text-foreground tabular-nums">
-                      {formatNumber(tx.shares)}
-                    </td>
-                    <td className="px-5 py-4 text-right font-mono text-sm text-muted tabular-nums">
-                      {formatCurrency(tx.price)}
-                    </td>
-                    <td className="px-5 py-4 text-right font-mono text-sm font-semibold text-foreground tabular-nums">
-                      {formatCurrency(tx.total)}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => setEditingTransaction(tx)}
-                          className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent/10 transition-all cursor-pointer"
-                          title="Edit Transaction"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                            <path d="m15 5 4 4"/>
-                          </svg>
-                        </button>
+                      {activePortfolioId === "ALL" && (
+                        <td className="px-5 py-4">
+                          <span
+                            style={{
+                              backgroundColor: `${portInfo.color}15`,
+                              borderColor: `${portInfo.color}35`,
+                              color: portInfo.color,
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono border"
+                          >
+                            <span
+                              style={{ backgroundColor: portInfo.color }}
+                              className="w-1.5 h-1.5 rounded-full"
+                            />
+                            <span>{portInfo.name}</span>
+                          </span>
+                        </td>
+                      )}
 
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Delete ${tx.type} transaction for ${tx.symbol}?`)) {
-                              deleteTransaction(tx.id);
-                            }
-                          }}
-                          className="p-1.5 rounded-lg text-muted hover:text-loss hover:bg-loss/10 transition-all cursor-pointer"
-                          title="Delete Transaction"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18"/>
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      <td className="px-5 py-4 text-right font-mono text-sm text-foreground tabular-nums">
+                        {formatNumber(tx.shares)}
+                      </td>
+                      <td className="px-5 py-4 text-right font-mono text-sm text-muted tabular-nums">
+                        {formatCurrency(tx.price)}
+                      </td>
+                      <td className="px-5 py-4 text-right font-mono text-sm font-semibold text-foreground tabular-nums">
+                        {formatCurrency(tx.total)}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => setEditingTransaction(tx)}
+                            className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent/10 transition-all cursor-pointer"
+                            title="Edit Transaction"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                              <path d="m15 5 4 4" />
+                            </svg>
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Delete ${tx.type} transaction for ${tx.symbol}?`)) {
+                                deleteTransaction(tx.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg text-muted hover:text-loss hover:bg-loss/10 transition-all cursor-pointer"
+                            title="Delete Transaction"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
-          
+
           {transactions.length === 0 && (
             <div className="text-center py-12">
-               <p className="text-muted">No transactions found. Add a transaction to see your history.</p>
+              <p className="text-muted">
+                No transactions found in this portfolio. Click "Add Transaction" above to start logging.
+              </p>
             </div>
           )}
         </div>
@@ -151,11 +187,10 @@ export default function TransactionTable() {
 
       {/* Edit Modal */}
       <AddTransactionModal
-        isOpen={!!editingTransaction}
+        isOpen={Boolean(editingTransaction)}
         onClose={() => setEditingTransaction(null)}
         initialTransaction={editingTransaction}
       />
     </>
   );
 }
-

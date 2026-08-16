@@ -7,6 +7,7 @@ import DiversificationSection from "@/components/portfolio/DiversificationSectio
 import LifetimePortfolioValueChart from "@/components/portfolio/LifetimePortfolioValueChart";
 import HoldingsPerformanceHeatmap from "@/components/portfolio/HoldingsPerformanceHeatmap";
 import PortfolioDoctorSection from "@/components/portfolio/PortfolioDoctorSection";
+import PortfolioSwitcher from "@/components/portfolio/PortfolioSwitcher";
 import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
 import { useCurrency } from "@/context/CurrencyContext";
 import { calculateDiversificationHealth } from "@/lib/diversification";
@@ -177,10 +178,15 @@ export default function PortfolioPage() {
             )}
           </div>
         </div>
+
+        {/* 💼 Strategy Portfolio Switcher Bar */}
+        <div className="mt-5 pt-4 border-t border-border/50 relative z-10">
+          <PortfolioSwitcher variant="tabs" />
+        </div>
       </div>
 
       {/* 🌟 2. Dedicated Full-Width Segmented Tab Navigation Bar (Never Clipped) */}
-      <div className="w-full bg-[#131722]/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-border/90 shadow-xl overflow-x-auto scrollbar-none animate-fade-in-up">
+      <div className="w-full bg-card-bg/90 backdrop-blur-2xl p-1.5 rounded-2xl border border-border/80 shadow-md overflow-x-auto scrollbar-none animate-fade-in-up">
         <div className="flex items-center gap-1.5 min-w-max sm:min-w-0 sm:w-full">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;

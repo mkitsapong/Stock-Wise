@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 import { GoogleGenAI } from '@google/genai';
 
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
+];
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
@@ -23,7 +30,6 @@ export async function GET(request: Request) {
     const $ = cheerio.load(html);
 
     // Yahoo Finance articles usually put content in <div class="caas-body"> or <article>
-    // So we just grab all paragraphs that are inside article bodies.
     let paragraphs: string[] = [];
     
     // Try to find main content areas
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
     if (contentAreas.length > 0) {
       contentAreas.each((_, el) => {
         const text = $(el).text().trim();
-        // Ignore very short paragraphs (often ads or captions)
+        // Ignore very short paragraphs
         if (text.length > 50) {
           paragraphs.push(text);
         }
@@ -57,19 +63,25 @@ export async function GET(request: Request) {
     // Try to translate and summarize with Gemini if API key is present
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const prompt = `Summarize the following financial news article into a concise, easy-to-read Thai summary (2-3 paragraphs max). Keep the professional tone and use appropriate financial terminology in Thai:\n\n${baseText}`;
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash', // Force recompile
-          contents: prompt,
-        });
-        return NextResponse.json({ summary: response.text });
-      } catch (aiError) {
-        console.error("AI Summarization failed, falling back to original text:", aiError);
-        // Fallback to original text if AI fails
-        return NextResponse.json({ summary: baseText });
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `Summarize the following financial news article into a concise, easy-to-read Thai summary (2-3 paragraphs max). Keep the professional tone and use appropriate financial terminology in Thai:\n\n${baseText}`;
+
+      for (const modelName of CANDIDATE_MODELS) {
+        try {
+          const aiResponse = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+          });
+          if (aiResponse && aiResponse.text) {
+            return NextResponse.json({ summary: aiResponse.text });
+          }
+        } catch (aiError: any) {
+          console.warn(`Model ${modelName} summary failed, trying next:`, aiError.message || aiError);
+        }
       }
+
+      // Fallback to base text if all models busy
+      return NextResponse.json({ summary: baseText });
     }
 
     // Fallback if no API key

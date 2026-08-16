@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
+];
+
 export async function POST(request: Request) {
   try {
     const { text } = await request.json();
@@ -15,19 +22,33 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-
     const prompt = `Translate the following financial news article into Thai. Keep the professional tone, use appropriate financial terminology in Thai, and ensure it reads naturally. Here is the article:\n\n${text}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash', // Force recompile
-      contents: prompt,
-    });
+    let lastError: any = null;
 
-    const translatedText = response.text;
+    // Try candidate models in order if one experiences 503 high demand or transient error
+    for (const modelName of CANDIDATE_MODELS) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        });
 
-    return NextResponse.json({ translatedText });
+        if (response && response.text) {
+          return NextResponse.json({ translatedText: response.text });
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Model ${modelName} translation failed, trying fallback:`, err.message || err);
+      }
+    }
+
+    throw lastError || new Error("All translation models are currently unavailable. Please try again in a moment.");
   } catch (error: any) {
     console.error("Translation Error:", error);
-    return NextResponse.json({ error: error.message || "Translation failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Translation service is temporarily busy. Please try again." },
+      { status: 500 }
+    );
   }
 }

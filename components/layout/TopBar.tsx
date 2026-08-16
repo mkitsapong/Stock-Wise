@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import CompanyLogo from "@/components/common/CompanyLogo";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
+import PortfolioSwitcher from "@/components/portfolio/PortfolioSwitcher";
 import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/context/TransactionContext";
 
@@ -277,8 +278,9 @@ export default function TopBar() {
           )}
         </div>
 
-        {/* Currency Switcher & User Auth Section */}
-        <div className="flex items-center gap-2.5 sm:gap-3 ml-2 sm:ml-4">
+        {/* Portfolio Switcher, Currency Switcher & User Auth Section */}
+        <div className="flex items-center gap-2 sm:gap-2.5 ml-2 sm:ml-4">
+          <PortfolioSwitcher variant="dropdown" />
           <CurrencySwitcher />
 
           {/* User Auth Profile Dropdown */}

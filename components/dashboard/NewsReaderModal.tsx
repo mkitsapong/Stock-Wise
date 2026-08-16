@@ -22,17 +22,22 @@ export default function NewsReaderModal({ news, isOpen, onClose }: NewsReaderMod
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
   const [showTranslation, setShowTranslation] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !news) return;
 
     // Reset state
-    setContent(null);
-    setTranslatedContent(null);
-    setError(null);
-    setShowTranslation(false);
-    
+    if (!isOpen || !news) {
+      setContent(null);
+      setTranslatedContent(null);
+      setShowTranslation(false);
+      setError(null);
+      setTranslationError(null);
+      return;
+    }
+
     // Don't fetch for mock tech analysis items
     if (news.uuid.startsWith('tech-')) {
       setContent("วิเคราะห์จากข้อมูล Technical Analysis และพฤติกรรมราคาหุ้นในอดีต (ไม่สามารถอ้างอิงจากแหล่งข่าวภายนอกได้)");
@@ -41,12 +46,14 @@ export default function NewsReaderModal({ news, isOpen, onClose }: NewsReaderMod
 
     async function fetchNewsContent() {
       setIsLoadingContent(true);
+      setError(null);
+      setTranslationError(null);
       try {
         const res = await fetch(`/api/news-content?url=${encodeURIComponent(news!.link)}`);
         const data = await res.json();
         
-        if (data.error) {
-          throw new Error(data.error);
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "Failed to load news content");
         }
         
         setContent(data.content);
@@ -67,6 +74,7 @@ export default function NewsReaderModal({ news, isOpen, onClose }: NewsReaderMod
     }
 
     setIsTranslating(true);
+    setTranslationError(null);
     try {
       const res = await fetch(`/api/translate`, {
         method: 'POST',
@@ -75,14 +83,14 @@ export default function NewsReaderModal({ news, isOpen, onClose }: NewsReaderMod
       });
       const data = await res.json();
       
-      if (data.error) {
-        throw new Error(data.error);
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Translation failed");
       }
       
       setTranslatedContent(data.translatedText);
       setShowTranslation(true);
     } catch (err: any) {
-      alert("Translation failed: " + (err.message || "Unknown error"));
+      setTranslationError(err.message || "ระบบแปลภาษา AI ไม่พร้อมใช้งานชั่วคราว กรุณาลองใหม่อีกครั้ง");
     } finally {
       setIsTranslating(false);
     }
@@ -131,6 +139,22 @@ export default function NewsReaderModal({ news, isOpen, onClose }: NewsReaderMod
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
+          {translationError && (
+            <div className="mb-4 p-3.5 rounded-xl bg-loss/10 border border-loss/20 flex items-center justify-between text-xs text-loss animate-fade-in-up">
+              <div className="flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{translationError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={translateContent}
+                className="px-2.5 py-1 rounded-lg bg-loss/20 hover:bg-loss/30 text-loss font-semibold transition-colors cursor-pointer"
+              >
+                ลองใหม่
+              </button>
+            </div>
+          )}
+
           {isLoadingContent ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-4">
               <svg className="h-8 w-8 animate-spin text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

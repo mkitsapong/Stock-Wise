@@ -323,7 +323,7 @@ export default function HoldingsPerformanceHeatmap({
 
       {/* 3. Heatmap Treemap View */}
       {viewMode === "HEATMAP" ? (
-        <div className="relative w-full h-[420px] sm:h-[480px] rounded-2xl overflow-hidden border border-border/80 bg-[#161a23] p-1 shadow-inner">
+        <div className="relative w-full h-[420px] sm:h-[480px] rounded-2xl overflow-hidden border border-border/80 bg-card-bg/60 p-1 shadow-inner">
           {treemapItems.map((item) => {
             const isHovered = hoveredItem?.symbol === item.symbol;
             const isSmallTile = item.w < 14 || item.h < 14;
@@ -372,7 +372,7 @@ export default function HoldingsPerformanceHeatmap({
                       )}
                     >
                       {item.returnPercent >= 0 ? "+" : ""}
-                      {item.returnPercent.toFixed(item.returnPercent > 100 || item.returnPercent < -100 ? 0 : 1)}%
+                      {item.returnPercent.toFixed(2)}%
                     </span>
                   )}
                 </div>
@@ -519,7 +519,7 @@ export default function HoldingsPerformanceHeatmap({
                     className="px-3.5 py-1.5 rounded-xl text-white font-mono font-extrabold text-xs sm:text-sm shadow-md flex items-center gap-1 min-w-[76px] justify-center"
                   >
                     <span>{isPos ? "+" : ""}</span>
-                    <span>{item.returnPercent.toFixed(1)}%</span>
+                    <span>{item.returnPercent.toFixed(2)}%</span>
                   </div>
 
                   <div className="text-muted group-hover:text-foreground group-hover:translate-x-0.5 transition-all hidden sm:block">

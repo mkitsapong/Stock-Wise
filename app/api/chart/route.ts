@@ -11,20 +11,30 @@ export async function GET(request: Request) {
 
   try {
     let interval = '1d';
-    let range = 'max';
+    let range = '2y';
 
     if (tf === '1D') {
       interval = '5m';
       range = '1d';
+    } else if (tf === '1W') {
+      interval = '15m';
+      range = '5d';
+    } else if (tf === '1M' || tf === '3M' || tf === '6M' || tf === '1Y') {
+      interval = '1d';
+      range = '2y'; // Provides enough historical data for 50/100/200 EMA calculations
+    } else if (tf === 'ALL') {
+      interval = '1d';
+      range = 'max';
     }
 
-    // Fetch historical data
+    // Fetch historical data from Yahoo Finance
     const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
     
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      next: { revalidate: tf === '1D' ? 30 : 300 } // Cache 30s for intraday, 5m for daily
     });
 
     if (!res.ok) {
@@ -43,6 +53,8 @@ export async function GET(request: Request) {
 
     // Format to OHLC
     const formattedData = [];
+    const isIntraday = tf === '1D' || tf === '1W';
+
     if (timestamp && quote.open && quote.high && quote.low && quote.close) {
       for (let i = 0; i < timestamp.length; i++) {
         // Skip null values which can occur in Yahoo's response
@@ -56,23 +68,21 @@ export async function GET(request: Request) {
         }
 
         let timeValue: string | number;
-        if (tf === '1D') {
-          // For intraday, lightweight-charts needs unix timestamp in seconds
-          // Actually Yahoo Finance timestamp is already in seconds, but we need to ensure it's a number
-          // And we might need to offset timezone if we want local time, but lightweight charts handles local time conversion if configured, or just pass seconds.
+        if (isIntraday) {
+          // For intraday (1D, 1W), lightweight-charts uses unix timestamp in seconds (number)
           timeValue = timestamp[i] as number;
         } else {
-          // For daily, it expects "YYYY-MM-DD"
+          // For daily (1M, 3M, 6M, 1Y, ALL), it expects "YYYY-MM-DD"
           const date = new Date(timestamp[i] * 1000);
           timeValue = date.toISOString().split('T')[0];
         }
 
         formattedData.push({
           date: timeValue,
-          open: quote.open[i],
-          high: quote.high[i],
-          low: quote.low[i],
-          close: quote.close[i],
+          open: Number(quote.open[i].toFixed(4)),
+          high: Number(quote.high[i].toFixed(4)),
+          low: Number(quote.low[i].toFixed(4)),
+          close: Number(quote.close[i].toFixed(4)),
         });
       }
     }
@@ -96,6 +106,8 @@ export async function GET(request: Request) {
         symbol: meta.symbol,
         longName: meta.longName || meta.shortName || meta.symbol,
         currency: meta.currency,
+        regularMarketPrice: meta.regularMarketPrice,
+        chartPreviousClose: meta.chartPreviousClose,
       },
       data: cleanData
     });

@@ -444,8 +444,8 @@ export default function DividendSection() {
 
       {/* 🌟 Custom Dividend Edit Modal */}
       {editingHolding && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in-up">
-          <div className="glass-card !bg-[#151923] border border-border/90 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5">
+        <div className="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 animate-fade-in-up">
+          <div className="glass-card border border-border/90 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-border/50">
               <div className="flex items-center gap-2.5">
                 <CompanyLogo symbol={editingHolding.symbol} name={editingHolding.name} size="sm" />

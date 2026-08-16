@@ -110,7 +110,7 @@ export default function LifetimePortfolioValueChart({
       </div>
 
       {/* 2. Outperformance Banner */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-[#1e2330]/90 border border-border/70 backdrop-blur-md flex items-center justify-between shadow-sm">
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-muted-bg/50 border border-border/70 backdrop-blur-md flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2.5">
           <span className="text-base sm:text-lg">🎉</span>
           <p className="text-xs sm:text-sm font-medium text-foreground/95">

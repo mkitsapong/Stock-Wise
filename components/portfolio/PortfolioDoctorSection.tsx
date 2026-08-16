@@ -113,7 +113,7 @@ export default function PortfolioDoctorSection() {
           </div>
 
           {/* Sub-Tab Switcher */}
-          <div className="flex items-center bg-[#131722]/90 backdrop-blur-2xl p-1 rounded-2xl border border-border/90 shadow-xl overflow-x-auto scrollbar-none self-start lg:self-center">
+          <div className="flex items-center bg-card-bg/90 backdrop-blur-2xl p-1 rounded-2xl border border-border/80 shadow-md overflow-x-auto scrollbar-none self-start lg:self-center">
             <button
               onClick={() => setActiveTab("REBALANCER")}
               className={cn(
