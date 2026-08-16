@@ -6,12 +6,13 @@ import DividendSection from "@/components/portfolio/DividendSection";
 import DiversificationSection from "@/components/portfolio/DiversificationSection";
 import LifetimePortfolioValueChart from "@/components/portfolio/LifetimePortfolioValueChart";
 import HoldingsPerformanceHeatmap from "@/components/portfolio/HoldingsPerformanceHeatmap";
+import PortfolioDoctorSection from "@/components/portfolio/PortfolioDoctorSection";
 import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
 import { useCurrency } from "@/context/CurrencyContext";
 import { calculateDiversificationHealth } from "@/lib/diversification";
 import { formatPercent, cn } from "@/lib/utils";
 
-type PortfolioTab = "OVERVIEW" | "DIVERSIFICATION" | "HOLDINGS" | "DIVIDENDS" | "ALL";
+type PortfolioTab = "OVERVIEW" | "DOCTOR" | "DIVERSIFICATION" | "HOLDINGS" | "DIVIDENDS" | "ALL";
 
 export default function PortfolioPage() {
   const [activeTab, setActiveTab] = useState<PortfolioTab>("OVERVIEW");
@@ -47,6 +48,16 @@ export default function PortfolioPage() {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
           <polyline points="16 7 22 7 22 13" />
+        </svg>
+      ),
+    },
+    {
+      id: "DOCTOR",
+      label: "AI Doctor & Simulator",
+      badge: "AI",
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       ),
     },
@@ -123,7 +134,7 @@ export default function PortfolioPage() {
               Portfolio Analytics
             </h1>
             <p className="text-xs sm:text-sm text-muted font-medium">
-              Comprehensive performance heatmap, lifetime returns & risk diversification
+              Comprehensive performance heatmap, lifetime returns, AI doctor & risk diversification
             </p>
           </div>
 
@@ -178,7 +189,7 @@ export default function PortfolioPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer flex-1 group",
+                  "flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer flex-1 group",
                   isActive
                     ? "bg-accent text-white font-bold shadow-lg shadow-accent/25 scale-[1.01]"
                     : "text-muted hover:text-foreground hover:bg-white/5"
@@ -223,6 +234,12 @@ export default function PortfolioPage() {
         </div>
       )}
 
+      {activeTab === "DOCTOR" && (
+        <div className="space-y-6">
+          <PortfolioDoctorSection />
+        </div>
+      )}
+
       {activeTab === "DIVERSIFICATION" && (
         <div className="space-y-6">
           <DiversificationSection />
@@ -243,6 +260,7 @@ export default function PortfolioPage() {
 
       {activeTab === "ALL" && (
         <div className="space-y-8">
+          <PortfolioDoctorSection />
           <LifetimePortfolioValueChart />
           <HoldingsPerformanceHeatmap />
           <DiversificationSection />
