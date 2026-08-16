@@ -28,14 +28,18 @@ export default function WatchlistPage() {
       setIsLoading(true);
       try {
         const symbols = watchlist.map((item) => item.symbol).join(",");
-        const res = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`);
+        const res = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}&range=7d&interval=1d`);
         const data = await res.json();
         
         // Match the API response to the WatchlistItems
         const sparkData = data.spark?.result || [];
         
         const mappedQuotes = watchlist.map((item) => {
-          const sparkInfo = sparkData.find((s: any) => s.symbol === item.symbol);
+          const symUpper = item.symbol.toUpperCase();
+          const sparkInfo = sparkData.find(
+            (s: any) => s.symbol?.toUpperCase() === symUpper
+          );
+
           let currentPrice = 0;
           let prevClose = 0;
           let sparklineData: number[] = [];
@@ -49,11 +53,22 @@ export default function WatchlistPage() {
             sparklineData = indicators?.quote?.[0]?.close || [];
             
             // Clean up nulls in sparkline data
-            sparklineData = sparklineData.filter((p: number | null) => p !== null) as number[];
+            sparklineData = sparklineData.filter((p: number | null) => p !== null && !isNaN(p)) as number[];
 
             // Update name from Yahoo if not set
-            if (!name || name === "Unknown Company" || name === "") {
-               name = meta.shortName || meta.longName || item.symbol;
+            if (!name || name === "Unknown Company" || name === "" || name === item.symbol) {
+              name = meta.shortName || meta.longName || item.symbol;
+            }
+          }
+
+          // Fallback if price was already known in previous quotes
+          if (currentPrice === 0) {
+            const prevQuote = quotes.find((q) => q.symbol?.toUpperCase() === symUpper);
+            if (prevQuote && prevQuote.currentPrice > 0) {
+              currentPrice = prevQuote.currentPrice;
+              prevClose = prevQuote.currentPrice - (prevQuote.dayChange || 0);
+              sparklineData = prevQuote.sparklineData || [];
+              name = name || prevQuote.name;
             }
           }
 
@@ -62,7 +77,7 @@ export default function WatchlistPage() {
 
           return {
             ...item,
-            name,
+            name: name || item.symbol,
             currentPrice,
             dayChange,
             dayChangePercent,
