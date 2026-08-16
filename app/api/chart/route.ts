@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
+import { sanitizeSymbol } from '@/lib/security';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const symbol = searchParams.get('symbol');
+  const rawSymbol = searchParams.get('symbol');
   const tf = searchParams.get('tf') || 'ALL';
 
+  const symbol = sanitizeSymbol(rawSymbol || '');
+
   if (!symbol) {
-    return NextResponse.json({ error: "Missing symbol parameter" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid or missing symbol parameter" }, { status: 400 });
   }
 
   try {

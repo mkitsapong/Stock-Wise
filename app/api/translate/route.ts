@@ -12,9 +12,12 @@ export async function POST(request: Request) {
   try {
     const { text } = await request.json();
 
-    if (!text) {
-      return NextResponse.json({ error: "Missing text to translate" }, { status: 400 });
+    if (!text || typeof text !== 'string') {
+      return NextResponse.json({ error: "Missing or invalid text to translate" }, { status: 400 });
     }
+
+    // Limit maximum payload to 15,000 characters to prevent token exhaustion / DOS
+    const safeText = text.slice(0, 15000);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -22,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Translate the following financial news article into Thai. Keep the professional tone, use appropriate financial terminology in Thai, and ensure it reads naturally. Here is the article:\n\n${text}`;
+    const prompt = `Translate the following financial news article into Thai. Keep the professional tone, use appropriate financial terminology in Thai, and ensure it reads naturally. Here is the article:\n\n${safeText}`;
 
     let lastError: any = null;
 

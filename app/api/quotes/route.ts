@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { sanitizeSymbols } from '@/lib/security';
 
 // In-memory cache to prevent spamming Yahoo Finance
 const quoteCache = new Map<string, { data: any; timestamp: number }>();
@@ -61,10 +62,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing symbols parameter" }, { status: 400 });
   }
 
-  const rawSymbols = symbolsParam
-    .split(',')
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
+  const rawList = symbolsParam.split(',');
+  const rawSymbols = sanitizeSymbols(rawList, 50);
 
   if (rawSymbols.length === 0) {
     return NextResponse.json({ spark: { result: [] } });
