@@ -148,8 +148,12 @@ export default function TopBar() {
     }
   };
 
-  // Get user initials
+  // User profile image & initials
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : "SW";
+  const userAvatarUrl = user?.user_metadata?.avatar_url || 
+                        user?.user_metadata?.picture || 
+                        (user?.email ? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.email)}&backgroundColor=6366f1,a855f7` : null);
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0];
 
   return (
     <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border/80 bg-background/85 px-4 sm:px-6 lg:px-8 backdrop-blur-xl transition-all">
@@ -170,26 +174,14 @@ export default function TopBar() {
         {/* Search Section */}
         <div className="relative w-full max-w-xl flex-[2] md:flex-none" ref={containerRef}>
           <div className="relative flex items-center group">
-            {isLoading ? (
-              <svg
-                className="absolute left-3.5 h-4 w-4 animate-spin text-accent"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <svg
-                className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            )}
+            <svg
+              className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               ref={inputRef}
               type="text"
@@ -220,58 +212,47 @@ export default function TopBar() {
             </div>
           </div>
 
-          {/* Autocomplete Dropdown */}
-          {isOpen && query.length > 0 && (
-            <div className="absolute left-0 mt-2 w-full origin-top-left rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl py-2 shadow-2xl animate-fade-in-up z-50 overflow-hidden">
-              {results.length > 0 ? (
-                <ul className="max-h-80 overflow-y-auto scrollbar-thin divide-y divide-border/30">
-                  {results.map((asset) => (
-                    <li
-                      key={asset.symbol}
-                      className="cursor-pointer px-4 py-2.5 hover:bg-accent/10 transition-colors group/item"
+          {/* Search Dropdown */}
+          {isOpen && (debouncedQuery.trim() || isLoading) && (
+            <div className="absolute left-0 right-0 top-full mt-2 rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+              {isLoading ? (
+                <div className="flex items-center justify-center p-6 text-sm text-muted">
+                  <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mr-2" />
+                  Searching global assets...
+                </div>
+              ) : results.length > 0 ? (
+                <div className="max-h-[380px] overflow-y-auto divide-y divide-border/40 custom-scrollbar">
+                  {results.map((item) => (
+                    <button
+                      key={item.symbol}
                       onClick={() => {
-                        setQuery(asset.symbol);
+                        setQuery(item.symbol);
                         setIsOpen(false);
-                        router.push(`/?symbol=${asset.symbol}`);
+                        router.push(`/?symbol=${item.symbol}`);
                       }}
+                      className="flex w-full items-center justify-between p-3.5 text-left transition-colors hover:bg-accent/10 focus:bg-accent/10 focus:outline-none group cursor-pointer"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <CompanyLogo symbol={asset.symbol} name={asset.name} size="sm" />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-foreground text-sm font-mono flex items-center gap-2 group-hover/item:text-accent transition-colors">
-                              {asset.symbol}
-                              {asset.exchange && (
-                                <span className="text-[10px] text-muted font-normal uppercase bg-muted-bg px-1.5 py-0.2 rounded font-sans">
-                                  {asset.exchange}
-                                </span>
-                              )}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <CompanyLogo symbol={item.symbol} size="md" className="rounded-xl flex-shrink-0" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-sm text-foreground group-hover:text-accent transition-colors">
+                              {item.symbol}
                             </span>
-                            <span className="text-xs text-muted truncate max-w-[260px]">
-                              {asset.name}
+                            <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-md border", getBadgeClass(item.type))}>
+                              {getBadgeLabel(item.type)}
                             </span>
                           </div>
+                          <p className="text-xs text-muted truncate mt-0.5">{item.name}</p>
                         </div>
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase border whitespace-nowrap",
-                            getBadgeClass(asset.type)
-                          )}
-                        >
-                          {getBadgeLabel(asset.type)}
-                        </span>
                       </div>
-                    </li>
+                      <span className="text-xs text-muted font-mono flex-shrink-0 ml-2">{item.exchange}</span>
+                    </button>
                   ))}
-                </ul>
-              ) : !isLoading ? (
-                <div className="px-4 py-4 text-sm text-muted text-center">
-                  No assets found for <span className="font-semibold text-foreground">"{query}"</span>
                 </div>
               ) : (
-                <div className="px-4 py-4 text-sm text-muted text-center flex items-center justify-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
-                  Searching Yahoo Finance...
+                <div className="p-6 text-center text-sm text-muted">
+                  No assets found matching &ldquo;{debouncedQuery}&rdquo;
                 </div>
               )}
             </div>
@@ -288,13 +269,34 @@ export default function TopBar() {
             {user ? (
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="relative flex items-center gap-2 p-1 rounded-xl hover:bg-muted-bg/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-card-bg/80 border border-border/80 hover:border-accent/40 hover:bg-muted-bg/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer group shadow-xs"
                 aria-label="User Profile"
               >
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
-                  {userInitial}
+                <div className="relative h-7 w-7 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                  {userAvatarUrl ? (
+                    <img 
+                      src={userAvatarUrl} 
+                      alt="User Avatar" 
+                      className="w-full h-full object-cover" 
+                      referrerPolicy="no-referrer" 
+                    />
+                  ) : (
+                    userInitial
+                  )}
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border-2 border-background rounded-full" />
                 </div>
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-background rounded-full" />
+                <div className="hidden md:flex flex-col items-start text-left max-w-[130px] lg:max-w-[180px]">
+                  <p className="text-xs font-semibold text-foreground truncate w-full group-hover:text-accent transition-colors">
+                    {user.email}
+                  </p>
+                  <span className="text-[10px] text-emerald-500 font-mono flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Online
+                  </span>
+                </div>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted group-hover:text-foreground transition-transform duration-200 hidden sm:block">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
             ) : (
               <button
@@ -311,15 +313,32 @@ export default function TopBar() {
             {/* Profile Dropdown Menu */}
             {isProfileOpen && user && (
               <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-2 shadow-2xl animate-fade-in-up z-50">
-                <div className="px-3 py-2.5 border-b border-border/40">
-                  <p className="text-xs font-semibold text-foreground truncate">
-                    {user.email}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[11px] text-muted">
-                      Supabase Cloud Sync: {syncStatus === "synced" ? "Active" : syncStatus === "syncing" ? "Syncing..." : "Connected"}
-                    </span>
+                <div className="px-3 py-3 border-b border-border/40 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+                    {userAvatarUrl ? (
+                      <img 
+                        src={userAvatarUrl} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover" 
+                        referrerPolicy="no-referrer" 
+                      />
+                    ) : (
+                      userInitial
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-foreground truncate">
+                      {userName}
+                    </p>
+                    <p className="text-[11px] text-muted truncate mt-0.5">
+                      {user.email}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] text-emerald-400 font-mono">
+                        {syncStatus === "synced" ? "Synced" : syncStatus === "syncing" ? "Syncing..." : "Connected"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

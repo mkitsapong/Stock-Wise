@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -67,13 +68,30 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: "Analytics",
+    href: "/analytics",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { currency, toggleCurrency, exchangeRate } = useCurrency();
+  const { user, openAuthModal, signOut } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
+  const userAvatarUrl = user?.user_metadata?.avatar_url || 
+                        user?.user_metadata?.picture || 
+                        (user?.email ? `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.email)}&backgroundColor=6366f1,a855f7` : null);
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0];
 
   return (
     <aside
@@ -98,7 +116,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 flex flex-col gap-1 p-3 mt-2">
+      <nav className="flex-1 flex flex-col gap-1 p-3 mt-2 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -126,20 +144,71 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom Controls */}
-      <div className="p-3 border-t border-border flex flex-col gap-2">
+      {/* Bottom Controls & User Profile */}
+      <div className="p-3 border-t border-border flex flex-col gap-2 bg-sidebar-bg">
+        {/* User Profile Card */}
+        {user ? (
+          <div className={cn(
+            "flex items-center gap-2.5 p-2 rounded-xl bg-muted-bg/40 border border-border/40 transition-all",
+            collapsed && "justify-center p-1.5"
+          )}>
+            <div className="relative h-8 w-8 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-xs">
+              {userAvatarUrl ? (
+                <img 
+                  src={userAvatarUrl} 
+                  alt="User Avatar" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
+              ) : (
+                userInitial
+              )}
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border-2 border-background rounded-full" />
+            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-sidebar-active truncate" title={user.email}>
+                  {userName}
+                </p>
+                <p className="text-[10px] text-muted truncate -mt-0.5" title={user.email}>
+                  {user.email}
+                </p>
+                <button
+                  onClick={() => signOut()}
+                  className="text-[10px] text-rose-400 hover:text-rose-300 font-medium hover:underline cursor-pointer transition-colors block mt-0.5"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => openAuthModal("signin")}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs border border-accent/20 transition-all active:scale-95 cursor-pointer",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            {!collapsed && <span>Sign In / Sync</span>}
+          </button>
+        )}
+
         {/* Currency Toggle */}
         <button
           onClick={toggleCurrency}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full group cursor-pointer"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full group cursor-pointer"
           title={`Switch currency (Current: ${currency})`}
         >
-          <div className="w-5 h-5 rounded-md bg-muted-bg border border-border/80 flex items-center justify-center font-mono font-bold text-xs text-accent group-hover:border-accent">
+          <div className="w-5 h-5 rounded-md bg-muted-bg border border-border/80 flex items-center justify-center font-mono font-bold text-[10px] text-accent group-hover:border-accent flex-shrink-0">
             {currency === "USD" ? "$" : "฿"}
           </div>
           {!collapsed && (
             <div className="flex items-center justify-between flex-1 text-xs">
-              <span>{currency === "USD" ? "Currency: USD ($)" : "Currency: THB (฿)"}</span>
+              <span>{currency === "USD" ? "USD ($)" : "THB (฿)"}</span>
               <span className="font-mono text-[10px] text-muted">
                 {currency === "USD" ? `฿${exchangeRate.toFixed(1)}` : "$1.00"}
               </span>
@@ -150,43 +219,45 @@ export default function Sidebar() {
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full cursor-pointer"
         >
-          {theme === "dark" ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" />
-              <line x1="21" y1="12" x2="23" y2="12" />
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          )}
+          <span className="flex-shrink-0">
+            {theme === "dark" ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </span>
           {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
         </button>
 
         {/* Collapse Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-sidebar-text hover:text-sidebar-active hover:bg-sidebar-active-bg/50 transition-all duration-200 w-full cursor-pointer"
         >
           <svg
-            width="20"
-            height="20"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={cn("transition-transform duration-300", collapsed && "rotate-180")}
+            className={cn("transition-transform duration-300 flex-shrink-0", collapsed && "rotate-180")}
           >
             <polyline points="15 18 9 12 15 6" />
           </svg>

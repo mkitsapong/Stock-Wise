@@ -52,15 +52,15 @@ export default function WatchlistRow({ item, index }: Props) {
   return (
     <tr 
       onClick={handleRowClick}
-      className="border-b border-border/60 hover:bg-card-hover/80 transition-all cursor-pointer group"
+      className="border-b border-border/50 hover:bg-card-hover/90 transition-all duration-200 cursor-pointer group"
     >
       {/* Symbol & Name */}
       <td className="py-3.5 px-4 align-middle">
         <div className="flex items-center gap-3">
-          <CompanyLogo symbol={item.symbol} name={item.name} size="md" className="group-hover:scale-105 transition-transform" />
+          <CompanyLogo symbol={item.symbol} name={item.name} size="md" className="group-hover:scale-105 transition-transform duration-200 shadow-xs" />
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-foreground font-mono group-hover:text-accent transition-colors">{item.symbol}</p>
+              <p className="text-sm font-bold text-foreground font-mono group-hover:text-accent transition-colors duration-200">{item.symbol}</p>
               {isNearTarget && (
                 <span className="flex h-2 w-2 relative" title="Near Target Buy Price">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -73,15 +73,14 @@ export default function WatchlistRow({ item, index }: Props) {
         </div>
       </td>
 
-
       {/* 7D Trend Area Sparkline */}
       <td className="py-3.5 px-4 align-middle w-[130px]">
         <div className="h-[38px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
+            <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={sparklineColor} stopOpacity={0.35} />
+                  <stop offset="0%" stopColor={sparklineColor} stopOpacity={0.45} />
                   <stop offset="100%" stopColor={sparklineColor} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
@@ -89,7 +88,7 @@ export default function WatchlistRow({ item, index }: Props) {
                 type="monotone"
                 dataKey="price"
                 stroke={sparklineColor}
-                strokeWidth={1.8}
+                strokeWidth={2}
                 fill={`url(#${gradientId})`}
                 dot={false}
                 isAnimationActive={false}
@@ -117,7 +116,7 @@ export default function WatchlistRow({ item, index }: Props) {
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <input 
               type="number" 
-              className="w-24 bg-card-bg border border-accent rounded-lg px-2.5 py-1 text-xs font-mono text-foreground outline-none shadow-sm"
+              className="w-24 bg-card-bg border border-accent rounded-lg px-2.5 py-1 text-xs font-mono text-foreground outline-none shadow-sm focus:ring-2 focus:ring-accent/30 transition-all"
               placeholder="Target..."
               value={newTarget}
               onChange={e => setNewTarget(e.target.value)}
@@ -129,7 +128,7 @@ export default function WatchlistRow({ item, index }: Props) {
             />
             <button 
               onClick={handleSaveTarget} 
-              className="px-2.5 py-1 bg-accent text-white rounded-lg text-xs font-bold hover:bg-accent/90 transition-all shadow-sm cursor-pointer"
+              className="px-2.5 py-1 bg-accent text-white rounded-lg text-xs font-bold hover:bg-accent/90 transition-all shadow-sm cursor-pointer active:scale-95"
             >
               Save
             </button>
@@ -142,7 +141,7 @@ export default function WatchlistRow({ item, index }: Props) {
           </div>
         ) : (
           <div 
-            className="flex flex-col group/target cursor-pointer p-1 rounded-lg hover:bg-muted-bg/50 transition-colors" 
+            className="flex flex-col group/target cursor-pointer p-1.5 rounded-xl hover:bg-muted-bg/60 transition-all duration-200" 
             onClick={(e) => {
               e.stopPropagation();
               setIsEditingTarget(true);
@@ -165,7 +164,7 @@ export default function WatchlistRow({ item, index }: Props) {
               {hasTarget && (
                 <span
                   className={cn(
-                    "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md font-mono border",
+                    "text-[10px] font-bold uppercase px-2 py-0.5 rounded-md font-mono border transition-colors",
                     isAboveTarget 
                       ? "bg-loss/10 text-loss border-loss/20" 
                       : "bg-profit/10 text-profit border-profit/20"
@@ -181,8 +180,8 @@ export default function WatchlistRow({ item, index }: Props) {
               <div className="w-full bg-border/40 h-1.5 rounded-full overflow-hidden mt-1.5">
                 <div 
                   className={cn(
-                    "h-full rounded-full transition-all",
-                    isAboveTarget ? "bg-loss" : "bg-profit"
+                    "h-full rounded-full transition-all duration-500 ease-out",
+                    isAboveTarget ? "bg-loss shadow-xs shadow-loss/50" : "bg-profit shadow-xs shadow-profit/50"
                   )}
                   style={{ 
                     width: `${Math.min(100, Math.max(10, 100 - Math.abs(distanceFromTarget)))}%` 
@@ -202,10 +201,10 @@ export default function WatchlistRow({ item, index }: Props) {
               e.stopPropagation();
               router.push(`/?symbol=${item.symbol}`);
             }}
-            className="p-1.5 rounded-lg bg-card-bg/80 border border-border text-muted hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all shadow-sm cursor-pointer"
+            className="p-1.5 rounded-lg bg-card-bg/90 border border-border/70 text-muted hover:text-accent hover:border-accent/40 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
             title="Open Interactive Chart"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="20" x2="18" y2="10"></line>
               <line x1="12" y1="20" x2="12" y2="4"></line>
               <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -216,10 +215,10 @@ export default function WatchlistRow({ item, index }: Props) {
               e.stopPropagation();
               removeFromWatchlist(item.symbol);
             }}
-            className="p-1.5 rounded-lg bg-card-bg/80 border border-border text-muted hover:text-loss hover:border-loss/50 opacity-0 group-hover:opacity-100 transition-all shadow-sm cursor-pointer"
+            className="p-1.5 rounded-lg bg-card-bg/90 border border-border/70 text-muted hover:text-loss hover:border-loss/50 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
             title="Remove from Watchlist"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       </td>
