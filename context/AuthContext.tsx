@@ -78,18 +78,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (
+    email: string,
+    password: string
+  ): Promise<{ error: string | null; needsEmailConfirmation?: boolean }> => {
     if (!supabase) {
       return { error: "Supabase is not configured yet. Please provide NEXT_PUBLIC_SUPABASE_URL and KEY." };
     }
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-    if (!error) {
-      closeAuthModal();
+    if (error) {
+      return { error: error.message };
     }
-    return { error: error ? error.message : null };
+    // If session is created immediately (email confirmation disabled in Supabase), close modal
+    if (data.session) {
+      closeAuthModal();
+      return { error: null, needsEmailConfirmation: false };
+    }
+    // If user created but session is null, email verification is required
+    return { error: null, needsEmailConfirmation: true };
   };
 
   const signInWithGoogle = async () => {
