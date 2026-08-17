@@ -1,5 +1,7 @@
 import CandlestickSection from "@/components/dashboard/CandlestickSection";
 import HeroCards from "@/components/dashboard/HeroCards";
+import BenchmarkComparison from "@/components/dashboard/BenchmarkComparison";
+import EarningsCalendar from "@/components/dashboard/EarningsCalendar";
 
 export default function DashboardPage() {
   return (
@@ -26,8 +28,15 @@ export default function DashboardPage() {
 
       {/* Candlestick Chart & Analysis */}
       <CandlestickSection />
+
+      {/* Benchmark Comparison + Earnings Calendar */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <BenchmarkComparison className="xl:col-span-2" />
+        <EarningsCalendar />
+      </div>
     </div>
   );
 }
+
 
 

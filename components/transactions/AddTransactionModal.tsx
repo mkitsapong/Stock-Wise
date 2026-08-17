@@ -17,6 +17,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
 
   const [type, setType] = useState<"BUY" | "SELL">("BUY");
   const [portfolioId, setPortfolioId] = useState<string>("growth");
+  const [txCurrency, setTxCurrency] = useState<"USD" | "THB">("USD");
   const [symbol, setSymbol] = useState("");
   const [assetName, setAssetName] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -29,6 +30,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
     if (initialTransaction) {
       setType(initialTransaction.type);
       setPortfolioId(initialTransaction.portfolioId || "growth");
+      setTxCurrency(initialTransaction.currency || "USD");
       setSymbol(initialTransaction.symbol);
       setAssetName(initialTransaction.name || "");
       setShares(String(initialTransaction.shares));
@@ -39,6 +41,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
       // Default to currently active portfolio, or first portfolio
       const defaultPort = activePortfolioId !== "ALL" ? activePortfolioId : portfolios[0]?.id || "growth";
       setPortfolioId(defaultPort);
+      setTxCurrency("USD");
       setSymbol("");
       setAssetName("");
       setShares("");
@@ -90,13 +93,19 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
     e.preventDefault();
     if (!symbol || !shares || !price || !date) return;
 
+    const priceNum = Number(price);
+    // Convert to USD for portfolio calculations if entered in THB
+    const priceUSD = txCurrency === "THB" ? priceNum / exchangeRate : priceNum;
+
     const payload = {
       portfolioId: portfolioId || "growth",
+      currency: txCurrency,
       type,
       symbol: symbol.trim().toUpperCase(),
       name: assetName || symbol.trim().toUpperCase(),
       shares: Number(shares),
-      price: Number(price),
+      price: priceNum,
+      priceUSD,
       date,
     };
 
@@ -110,6 +119,8 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
   };
 
   const total = Number(shares) * Number(price);
+  const totalUSD = txCurrency === "THB" ? total / exchangeRate : total;
+  const totalTHB = txCurrency === "USD" ? total * exchangeRate : total;
 
   return (
     <div
@@ -232,7 +243,7 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
             )}
           </div>
 
-          {/* Shares and Price */}
+          {/* Shares, Price & Currency */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
@@ -250,14 +261,34 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted mb-1.5">
-                Price ($ USD)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
+                  Price
+                </label>
+                {/* Currency Toggle */}
+                <div className="flex items-center gap-0.5 p-0.5 bg-muted-bg rounded-lg">
+                  {(["USD", "THB"] as const).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setTxCurrency(c)}
+                      className={cn(
+                        "px-2 py-0.5 text-[10px] font-bold rounded-md transition-all cursor-pointer",
+                        txCurrency === c
+                          ? "bg-accent text-white shadow-sm"
+                          : "text-muted hover:text-foreground"
+                      )}
+                    >
+                      {c === "USD" ? "$" : "฿"}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <input
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="0.00"
+                placeholder={txCurrency === "THB" ? "฿ 0.00" : "$ 0.00"}
                 required
                 min="0"
                 step="0.000000001"
@@ -286,20 +317,22 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted block">
-                    Total Investment
+                    Total ({txCurrency})
                   </span>
                   <span className="text-lg font-bold font-mono text-foreground">
-                    {formatCurrency(total)}
+                    {txCurrency === "THB"
+                      ? `฿${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </span>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-muted block font-mono">
-                    {currency === "THB" ? "USD Equivalent" : "THB Equivalent"}
+                    {txCurrency === "THB" ? "≈ USD" : "≈ THB"}
                   </span>
                   <span className="text-xs font-mono font-semibold text-muted/90">
-                    {currency === "THB"
-                      ? `$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : `฿${(total * exchangeRate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    {txCurrency === "THB"
+                      ? `$${totalUSD.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : `฿${totalTHB.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </span>
                 </div>
               </div>

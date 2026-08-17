@@ -836,11 +836,12 @@ export default function CandlestickChart({
 
       {/* Toolbar: Indicators & Controls */}
       <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-border/40">
-        {/* Top Controls: Chart Type, Indicators Bar, Timeframe */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Top Controls Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Left: Chart Type */}
+          <div className="flex items-center gap-2">
             {/* Chart Type Toggle */}
-            <div className="flex items-center bg-muted-bg/60 p-0.5 rounded-xl border border-border/50">
+            <div className="flex items-center gap-1 bg-muted-bg/40 p-1 rounded-xl border border-border/40">
               <button
                 onClick={() => setChartType("STANDARD")}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -862,22 +863,15 @@ export default function CandlestickChart({
                 Heikin Ashi
               </button>
             </div>
-
-            {/* Indicator Quick Label */}
-            <div className="hidden sm:flex items-center gap-1.5 ml-1">
-              <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-                Indicators:
-              </span>
-            </div>
           </div>
 
-          {/* Timeframe Toggle */}
-          <div className="flex items-center gap-1 bg-muted-bg/40 p-1 rounded-xl border border-border/40">
+          {/* Right: Timeframe Toggle */}
+          <div className="flex items-center gap-1 bg-muted-bg/40 p-1 rounded-xl border border-border/40 overflow-x-auto scrollbar-none">
             {(["1D", "1W", "1M", "3M", "6M", "1Y", "ALL"] as const).map((tf) => (
               <button
                 key={tf}
                 onClick={() => onTimeFrameChange?.(tf)}
-                className={`px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-mono font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
                   timeFrame === tf
                     ? "bg-accent text-white shadow-sm font-bold"
                     : "text-muted hover:text-foreground hover:bg-muted-bg"
@@ -890,7 +884,10 @@ export default function CandlestickChart({
         </div>
 
         {/* Technical Indicators Pill Bar */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-muted uppercase tracking-wider mr-1">
+            Indicators:
+          </span>
           {/* EMA 50 */}
           <button
             onClick={() => toggleIndicator("ema50")}
@@ -980,25 +977,6 @@ export default function CandlestickChart({
                 )}
               >
                 {latestRSI.toFixed(1)}
-              </span>
-            )}
-          </button>
-
-          {/* MACD */}
-          <button
-            onClick={() => toggleIndicator("macd")}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
-              indicators.macd && latestMACD !== null
-                ? "bg-blue-500/10 text-blue-400 border-blue-500/30 shadow-xs"
-                : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"
-            )}
-          >
-            <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>
-            <span>MACD (12,26,9)</span>
-            {latestMACD !== null && latestSignal !== null && indicators.macd && (
-              <span className="text-[10px] opacity-85">
-                {latestMACD.toFixed(2)} / {latestSignal.toFixed(2)}
               </span>
             )}
           </button>

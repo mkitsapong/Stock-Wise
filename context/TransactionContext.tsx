@@ -18,13 +18,15 @@ export interface Portfolio {
 export interface Transaction {
   id: string;
   portfolioId?: string; // Links transaction to a specific portfolio (default: "growth")
+  currency?: "USD" | "THB";  // Currency the price was entered in (default: "USD")
   date: string;
   type: "BUY" | "SELL";
   symbol: string;
   name?: string;
   shares: number;
-  price: number;
-  total: number;
+  price: number;          // Price in the transaction's currency
+  priceUSD?: number;      // Price converted to USD (for portfolio calculations)
+  total: number;          // Total in the transaction's currency
 }
 
 export interface Holding {
@@ -195,12 +197,14 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
           const mappedTxs: Transaction[] = txData.map((item) => ({
             id: item.id,
             portfolioId: item.portfolio_id || localPortMap[item.id] || "growth",
+            currency: (item.currency as "USD" | "THB") || "USD",
             date: item.date,
             type: item.type as "BUY" | "SELL",
             symbol: item.symbol,
             name: item.name || item.symbol,
             shares: Number(item.shares),
             price: Number(item.price),
+            priceUSD: item.price_usd ? Number(item.price_usd) : Number(item.price),
             total: Number(item.total),
           }));
 
@@ -406,11 +410,15 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
     const targetPortfolioId =
       tx.portfolioId || (activePortfolioId !== "ALL" ? activePortfolioId : "growth");
 
+    const txCurrency = tx.currency || "USD";
+
     const newTx: Transaction = {
       ...tx,
       id: newId,
       portfolioId: targetPortfolioId,
+      currency: txCurrency,
       total: tx.shares * tx.price,
+      // priceUSD is set by caller if currency is THB
     };
 
     setAllTransactions((prev) => [newTx, ...prev]);
@@ -422,12 +430,14 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
           id: newTx.id,
           user_id: user.id,
           portfolio_id: newTx.portfolioId,
+          currency: newTx.currency || "USD",
           date: newTx.date,
           type: newTx.type,
           symbol: newTx.symbol,
           name: newTx.name || newTx.symbol,
           shares: newTx.shares,
           price: newTx.price,
+          price_usd: newTx.priceUSD ?? newTx.price,
           total: newTx.total,
         });
 

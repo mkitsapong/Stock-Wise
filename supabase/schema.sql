@@ -23,18 +23,22 @@ create table if not exists public.transactions (
   id text primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   portfolio_id text default 'growth',
+  currency text default 'USD' check (currency in ('USD', 'THB')),
   date text not null,
   type text not null check (type in ('BUY', 'SELL')),
   symbol text not null,
   name text,
   shares numeric not null,
-  price numeric not null,
+  price numeric not null,        -- Price in the transaction currency
+  price_usd numeric,             -- Price converted to USD (for portfolio calculations)
   total numeric not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Add column if table already exists without portfolio_id
+-- Add columns if table already exists (migration-safe)
 alter table public.transactions add column if not exists portfolio_id text default 'growth';
+alter table public.transactions add column if not exists currency text default 'USD';
+alter table public.transactions add column if not exists price_usd numeric;
 
 -- Index for fast user query
 create index if not exists idx_transactions_user_id on public.transactions (user_id);

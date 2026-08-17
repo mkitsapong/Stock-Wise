@@ -8,6 +8,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { formatPercent, formatNumber, cn } from "@/lib/utils";
 import CompanyLogo from "@/components/common/CompanyLogo";
 import MoveStockModal from "@/components/portfolio/MoveStockModal";
+import AverageCalculatorModal from "@/components/portfolio/AverageCalculatorModal";
 
 type SortKey = "symbol" | "shares" | "avgCost" | "currentPrice" | "totalValue" | "plPercent";
 type SortDir = "asc" | "desc";
@@ -21,6 +22,7 @@ export default function HoldingsTable() {
   const [sortKey, setSortKey] = useState<SortKey>("totalValue");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [movingHolding, setMovingHolding] = useState<RealTimeHolding | null>(null);
+  const [calcHolding, setCalcHolding] = useState<RealTimeHolding | null>(null);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -198,15 +200,35 @@ export default function HoldingsTable() {
                       className="px-4 py-4 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setMovingHolding(h)}
-                        title="Move stock to another portfolio (ย้ายพอร์ต)"
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/20 transition-all active:scale-95 shadow-xs cursor-pointer"
-                      >
-                        <span>⇄</span>
-                        <span className="hidden sm:inline">Move</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setCalcHolding(h)}
+                          title="Calculate new average price (คำนวณถัวเฉลี่ย)"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-muted-bg/50 hover:bg-muted-bg text-muted hover:text-foreground transition-all active:scale-95 cursor-pointer"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                            <line x1="8" y1="6" x2="16" y2="6" />
+                            <line x1="16" y1="14" x2="16" y2="14.01" />
+                            <line x1="12" y1="14" x2="12" y2="14.01" />
+                            <line x1="8" y1="14" x2="8" y2="14.01" />
+                            <line x1="16" y1="18" x2="16" y2="18.01" />
+                            <line x1="12" y1="18" x2="12" y2="18.01" />
+                            <line x1="8" y1="18" x2="8" y2="18.01" />
+                          </svg>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setMovingHolding(h)}
+                          title="Move stock to another portfolio (ย้ายพอร์ต)"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold border border-accent/20 transition-all active:scale-95 shadow-xs cursor-pointer"
+                        >
+                          <span>⇄</span>
+                          <span className="hidden sm:inline">Move</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -233,6 +255,19 @@ export default function HoldingsTable() {
           name={movingHolding.name}
           shares={movingHolding.shares}
           totalValue={movingHolding.realTimeValue}
+        />
+      )}
+
+      {/* Average Calculator Modal */}
+      {calcHolding && (
+        <AverageCalculatorModal
+          isOpen={Boolean(calcHolding)}
+          onClose={() => setCalcHolding(null)}
+          symbol={calcHolding.symbol}
+          name={calcHolding.name}
+          currentShares={calcHolding.shares}
+          currentAvgCost={calcHolding.avgCost}
+          currentPrice={calcHolding.currentPrice}
         />
       )}
     </>
