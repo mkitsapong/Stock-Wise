@@ -14,7 +14,10 @@ interface AuthContextType {
   openAuthModal: (mode?: "signin" | "signup") => void;
   closeAuthModal: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUpWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
