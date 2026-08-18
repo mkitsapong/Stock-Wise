@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTransactions, type Portfolio, type PortfolioStrategy } from "@/context/TransactionContext";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +58,7 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
   const { addPortfolio, editPortfolio, deletePortfolio, activePortfolioId, setActivePortfolioId } =
     useTransactions();
 
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [strategy, setStrategy] = useState<PortfolioStrategy>("GROWTH");
   const [color, setColor] = useState("#10b981");
@@ -64,6 +66,10 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEditing = Boolean(initialPortfolio);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (initialPortfolio) {
@@ -80,7 +86,7 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
     setShowDeleteConfirm(false);
   }, [initialPortfolio, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,14 +120,14 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fade-in overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="glass-card w-full max-w-md p-6 sm:p-7 animate-fade-in-up shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-md p-6 sm:p-7 bg-card-bg/95 backdrop-blur-2xl border border-border/80 rounded-3xl shadow-2xl relative overflow-hidden my-auto animate-fade-in-up">
         {/* Ambient Top Glow */}
         <div
           className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-24 rounded-full blur-3xl opacity-30 pointer-events-none"
@@ -307,6 +313,7 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

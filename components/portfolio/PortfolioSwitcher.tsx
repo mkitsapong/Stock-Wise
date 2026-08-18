@@ -186,82 +186,84 @@ export default function PortfolioSwitcher({ className, variant = "tabs" }: Props
   // 2. Tabs / Pill Bar Variant (Default for Hero & Page Headers)
   return (
     <>
-      <div className={cn("flex flex-wrap items-center gap-2", className)}>
-        {/* All Portfolios Tab */}
-        <button
-          type="button"
-          onClick={() => setActivePortfolioId("ALL")}
-          className={cn(
-            "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-mono transition-all duration-200 border cursor-pointer",
-            activePortfolioId === "ALL"
-              ? "bg-gradient-to-r from-accent/20 to-purple-500/20 text-accent border-accent/40 font-bold shadow-md shadow-accent/10 scale-[1.02]"
-              : "bg-card-bg/60 text-muted border-border/60 hover:text-foreground hover:bg-card-bg hover:border-border"
-          )}
-        >
-          <span>🌐</span>
-          <span>All Portfolios</span>
-          <span className="px-1.5 py-0.2 rounded-md bg-muted-bg text-[10px] font-bold text-muted">
-            {allHoldings.length}
-          </span>
-        </button>
+      <div className={cn("w-full overflow-x-auto scrollbar-none py-1", className)}>
+        <div className="flex items-center gap-2 min-w-max">
+          {/* All Portfolios Tab */}
+          <button
+            type="button"
+            onClick={() => setActivePortfolioId("ALL")}
+            className={cn(
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-mono transition-all duration-200 border cursor-pointer shrink-0 whitespace-nowrap",
+              activePortfolioId === "ALL"
+                ? "bg-gradient-to-r from-accent/20 to-purple-500/20 text-accent border-accent/40 font-bold shadow-md shadow-accent/10 scale-[1.02]"
+                : "bg-card-bg/60 text-muted border-border/60 hover:text-foreground hover:bg-card-bg hover:border-border"
+            )}
+          >
+            <span>🌐</span>
+            <span>All Portfolios</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-muted-bg text-[10px] font-bold text-muted">
+              {allHoldings.length}
+            </span>
+          </button>
 
-        {/* Strategy Portfolios Tabs */}
-        {portfolios.map((p) => {
-          const pHoldings = getPortfolioHoldings(p.id);
-          const isSelected = activePortfolioId === p.id;
+          {/* Strategy Portfolios Tabs */}
+          {portfolios.map((p) => {
+            const pHoldings = getPortfolioHoldings(p.id);
+            const isSelected = activePortfolioId === p.id;
 
-          return (
-            <div key={p.id} className="relative group/pill flex items-center">
-              <button
-                type="button"
-                onClick={() => setActivePortfolioId(p.id)}
-                style={{
-                  borderColor: isSelected ? `${p.color}60` : undefined,
-                  backgroundColor: isSelected ? `${p.color}15` : undefined,
-                  color: isSelected ? p.color : undefined,
-                }}
-                className={cn(
-                  "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-mono transition-all duration-200 border cursor-pointer",
-                  isSelected
-                    ? "font-bold shadow-md scale-[1.02]"
-                    : "bg-card-bg/60 text-muted border-border/60 hover:text-foreground hover:bg-card-bg hover:border-border"
-                )}
-              >
-                <span>{STRATEGY_ICONS[p.strategy] || "💼"}</span>
-                <span>{p.name}</span>
-                <span className="px-1.5 py-0.2 rounded-md bg-muted-bg text-[10px] font-bold text-muted">
-                  {pHoldings.length}
-                </span>
-              </button>
+            return (
+              <div key={p.id} className="relative group/pill flex items-center shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActivePortfolioId(p.id)}
+                  style={{
+                    borderColor: isSelected ? `${p.color}60` : undefined,
+                    backgroundColor: isSelected ? `${p.color}15` : undefined,
+                    color: isSelected ? p.color : undefined,
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold font-mono transition-all duration-200 border cursor-pointer whitespace-nowrap shrink-0",
+                    isSelected
+                      ? "font-bold shadow-md scale-[1.02]"
+                      : "bg-card-bg/60 text-muted border-border/60 hover:text-foreground hover:bg-card-bg hover:border-border"
+                  )}
+                >
+                  <span>{STRATEGY_ICONS[p.strategy] || "💼"}</span>
+                  <span>{p.name}</span>
+                  <span className="px-1.5 py-0.2 rounded-md bg-muted-bg text-[10px] font-bold text-muted">
+                    {pHoldings.length}
+                  </span>
+                </button>
 
-              {/* Edit Cog button */}
-              <button
-                type="button"
-                onClick={(e) => handleOpenEdit(p, e)}
-                title="Edit Portfolio Settings"
-                className="ml-1 p-1.5 text-muted hover:text-foreground hover:bg-muted-bg/80 rounded-lg transition-all opacity-0 group-hover/pill:opacity-100 cursor-pointer"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                  <path d="m15 5 4 4"/>
-                </svg>
-              </button>
-            </div>
-          );
-        })}
+                {/* Edit Cog button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleOpenEdit(p, e)}
+                  title="Edit Portfolio Settings"
+                  className="ml-1 p-1.5 text-muted hover:text-foreground hover:bg-muted-bg/80 rounded-lg transition-all opacity-0 group-hover/pill:opacity-100 cursor-pointer shrink-0"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    <path d="m15 5 4 4"/>
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
 
-        {/* + Add New Portfolio Button */}
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-accent bg-muted-bg/40 hover:bg-accent/10 border border-dashed border-border/70 hover:border-accent/40 transition-all cursor-pointer"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          <span>New Portfolio</span>
-        </button>
+          {/* + Add New Portfolio Button */}
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted hover:text-accent bg-muted-bg/40 hover:bg-accent/10 border border-dashed border-border/70 hover:border-accent/40 transition-all cursor-pointer shrink-0 whitespace-nowrap"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>New Portfolio</span>
+          </button>
+        </div>
       </div>
 
       <PortfolioModal

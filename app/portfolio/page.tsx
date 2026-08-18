@@ -8,6 +8,7 @@ import LifetimePortfolioValueChart from "@/components/portfolio/LifetimePortfoli
 import HoldingsPerformanceHeatmap from "@/components/portfolio/HoldingsPerformanceHeatmap";
 import PortfolioDoctorSection from "@/components/portfolio/PortfolioDoctorSection";
 import PortfolioSwitcher from "@/components/portfolio/PortfolioSwitcher";
+import SharePortfolioModal from "@/components/portfolio/SharePortfolioModal";
 import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
 import { useCurrency } from "@/context/CurrencyContext";
 import { calculateDiversificationHealth } from "@/lib/diversification";
@@ -17,6 +18,7 @@ type PortfolioTab = "OVERVIEW" | "DOCTOR" | "DIVERSIFICATION" | "HOLDINGS" | "DI
 
 export default function PortfolioPage() {
   const [activeTab, setActiveTab] = useState<PortfolioTab>("OVERVIEW");
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { holdings, portfolioStats } = usePortfolioQuotes();
   const { formatCurrency, formatSignedCurrency } = useCurrency();
 
@@ -111,7 +113,7 @@ export default function PortfolioPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* 🌟 1. Standardized Page Header */}
-      <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text inline-block">
@@ -127,10 +129,29 @@ export default function PortfolioPage() {
           </p>
         </div>
 
-        {/* Strategy Switcher Bar */}
-        <div className="shrink-0">
-          <PortfolioSwitcher variant="tabs" />
+        {/* Header Actions */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            id="share-portfolio-btn"
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-accent to-purple-500 hover:from-accent/90 hover:to-purple-500/90 text-white font-bold text-xs shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            title="แชร์พอร์ต / สร้างภาพการ์ดสรุปพอร์ต"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span>แชร์พอร์ต</span>
+          </button>
         </div>
+      </div>
+
+      {/* 🌟 2. Strategy Portfolio Switcher Bar (Dedicated Row) */}
+      <div className="animate-fade-in-up opacity-0 w-full">
+        <PortfolioSwitcher variant="tabs" />
       </div>
 
       {/* 🌟 2. Hero KPI Cards Grid (Matching Dashboard Style) */}
@@ -332,6 +353,12 @@ export default function PortfolioPage() {
           <DividendSection />
         </div>
       )}
+
+      {/* Share Portfolio Modal */}
+      <SharePortfolioModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+      />
     </div>
   );
 }

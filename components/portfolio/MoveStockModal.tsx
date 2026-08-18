@@ -71,12 +71,12 @@ export default function MoveStockModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-fade-in overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="glass-card w-full max-w-md p-6 sm:p-7 animate-fade-in-up shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-md p-6 sm:p-7 bg-card-bg/95 backdrop-blur-2xl border border-border/80 rounded-3xl shadow-2xl relative overflow-hidden my-auto animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
