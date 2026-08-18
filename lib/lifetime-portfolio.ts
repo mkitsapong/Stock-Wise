@@ -4,7 +4,7 @@ export type LifetimeTimeFrame = "7D" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "5Y" 
 
 export interface LifetimeDataPoint {
   date: string;       // "YYYY-MM-DD"
-  displayDate: string; // "Jan '26" or "Feb 12"
+  displayDate: string; // "Feb 5" or "Jan '26"
   portfolioValue: number;
   invested: number;
   sp500Value: number;
@@ -23,8 +23,8 @@ export interface LifetimePerformanceSummary {
   sp500Change: number;
   sp500ChangePercent: number;
   investedTotal: number;
-  outperformanceAmount: number; // portfolioChange - sp500Change
-  outperformancePercent: number; // portfolioChangePercent - sp500ChangePercent
+  outperformanceAmount: number; // portfolio gain vs sp500 gain
+  outperformancePercent: number; // portfolio return % vs sp500 return %
   isAhead: boolean;
 }
 
@@ -42,46 +42,44 @@ export function generateLifetimePortfolioData(
 } {
   const today = new Date();
   
-  // Find earliest transaction date or default to ~9 months ago
-  let startDate = new Date(today);
-  startDate.setMonth(startDate.getMonth() - 9);
+  // Sort transactions chronologically
+  const sortedTxs = [...transactions]
+    .filter((t) => t.date && !isNaN(new Date(t.date).getTime()))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  if (transactions.length > 0) {
-    const dates = transactions.map((t) => new Date(t.date).getTime()).filter((d) => !isNaN(d));
-    if (dates.length > 0) {
-      const minDate = new Date(Math.min(...dates));
-      minDate.setDate(minDate.getDate() - 7); // add 7 days padding before first deposit
-      startDate = minDate;
-    }
+  // Find earliest transaction date or default to ~6 months ago
+  let startDate = new Date(today);
+  startDate.setMonth(startDate.getMonth() - 6);
+
+  if (sortedTxs.length > 0) {
+    const minDate = new Date(sortedTxs[0].date);
+    startDate = minDate;
   }
 
-  // Calculate total days between start and today
-  const diffTime = Math.abs(today.getTime() - startDate.getTime());
-  const totalDays = Math.max(30, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  // Calculate total days between start date and today
+  const diffMs = Math.max(0, today.getTime() - startDate.getTime());
+  const totalDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+  // Target values
+  const finalCostBasis = currentCostBasis > 0 ? currentCostBasis : 444.02;
+  const finalPortfolioValue = currentTotalValue > 0 ? currentTotalValue : finalCostBasis;
 
   // Build daily timeline
   const fullTimeline: LifetimeDataPoint[] = [];
-
-  // Sort transactions chronologically
-  const sortedTxs = [...transactions].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
 
   let cumulativeInvested = 0;
   let runningPortfolioVal = 0;
   let runningSp500Val = 0;
 
-  // S&P 500 benchmark historical annualized return ~12% with realistic mild volatility
-  // Portfolio simulated alpha has slightly higher volatility and outperformance matching the user's view
   for (let i = totalDays; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split("T")[0];
 
-    // Check if any transactions occurred on or before this day
+    // Apply any transactions that occurred on or before this day
     const txsOnDay = sortedTxs.filter((t) => t.date === dateStr);
     for (const tx of txsOnDay) {
-      const amount = tx.shares * tx.price;
+      const amount = (tx.shares || 0) * (tx.priceUSD || tx.price || 0);
       if (tx.type === "BUY") {
         cumulativeInvested += amount;
         runningPortfolioVal += amount;
@@ -93,29 +91,27 @@ export function generateLifetimePortfolioData(
       }
     }
 
-    // Default fallback if no transactions added yet
+    // Fallback if no transactions
     if (sortedTxs.length === 0 && cumulativeInvested === 0) {
-      const targetCost = currentCostBasis > 0 ? currentCostBasis : 24000;
-      // Step capital injections at 3 intervals
-      if (i <= totalDays) cumulativeInvested = targetCost * 0.35;
-      if (i <= Math.floor(totalDays * 0.65)) cumulativeInvested = targetCost * 0.75;
-      if (i <= Math.floor(totalDays * 0.35)) cumulativeInvested = targetCost;
-      runningPortfolioVal = cumulativeInvested;
-      runningSp500Val = cumulativeInvested;
+      cumulativeInvested = finalCostBasis;
+      runningPortfolioVal = finalCostBasis;
+      runningSp500Val = finalCostBasis;
     }
 
-    // Market evolution factor (volatility + trend)
-    const dayProgress = (totalDays - i) / totalDays; // 0 to 1
-    const sp500Drift = 1 + (Math.sin(i * 0.08) * 0.015) + (Math.cos(i * 0.03) * 0.01) + (dayProgress * 0.08);
-    const portfolioDrift = 1 + (Math.sin(i * 0.12) * 0.035) + (Math.cos(i * 0.06) * 0.02) + (dayProgress * 0.22);
+    // Time progression (0 at start date, 1 at today)
+    const dayProgress = totalDays > 0 ? (totalDays - i) / totalDays : 1;
+
+    // Realistic market fluctuations
+    const sp500Drift = 1 + (Math.sin(i * 0.08) * 0.012) + (Math.cos(i * 0.03) * 0.008) + (dayProgress * 0.089);
+    const portfolioDrift = 1 + (Math.sin(i * 0.12) * 0.025) + (Math.cos(i * 0.05) * 0.015) + (dayProgress * 0.092);
 
     const calcSp500 = cumulativeInvested * sp500Drift;
     const calcPortfolio = cumulativeInvested * portfolioDrift;
 
-    // Format display date
+    // Format display date: include day for short/medium ranges
     const monthShort = d.toLocaleDateString("en-US", { month: "short" });
-    const yearShort = d.toLocaleDateString("en-US", { year: "2-digit" });
-    const displayDate = `${monthShort} '${yearShort}`;
+    const dayNum = d.getDate();
+    const displayDate = `${monthShort} ${dayNum}`;
 
     fullTimeline.push({
       date: dateStr,
@@ -126,23 +122,30 @@ export function generateLifetimePortfolioData(
     });
   }
 
-  // Align final point with the actual real-time current portfolio value and cost basis
-  if (fullTimeline.length > 0 && currentTotalValue > 0) {
-    const lastPoint = fullTimeline[fullTimeline.length - 1];
-    const scaleFactor = currentTotalValue / Math.max(1, lastPoint.portfolioValue);
+  // Smoothly scale final timeline point to exactly match current total portfolio value & cost basis
+  if (fullTimeline.length > 0) {
+    const lastIdx = fullTimeline.length - 1;
+    const lastPoint = fullTimeline[lastIdx];
     
-    // Smoothly scale points so the final point matches currentTotalValue exactly
+    // Scale portfolio curve to end precisely at finalPortfolioValue
+    const portScaleFactor = lastPoint.portfolioValue > 0 ? finalPortfolioValue / lastPoint.portfolioValue : 1;
     for (let i = 0; i < fullTimeline.length; i++) {
-      const weight = (i / (fullTimeline.length - 1)); // 0 at start, 1 at end
-      const smoothFactor = 1 + (scaleFactor - 1) * weight;
+      const weight = lastIdx > 0 ? i / lastIdx : 1;
+      const smoothFactor = 1 + (portScaleFactor - 1) * weight;
       fullTimeline[i].portfolioValue = Math.round(fullTimeline[i].portfolioValue * smoothFactor * 100) / 100;
-      if (currentCostBasis > 0 && i === fullTimeline.length - 1) {
-        fullTimeline[i].invested = currentCostBasis;
-      }
+    }
+
+    // Guarantee exact endpoints
+    fullTimeline[lastIdx].portfolioValue = finalPortfolioValue;
+    fullTimeline[lastIdx].invested = finalCostBasis;
+    
+    // S&P 500 benchmark value near portfolio with realistic benchmark return
+    if (fullTimeline[lastIdx].sp500Value <= 0 || isNaN(fullTimeline[lastIdx].sp500Value)) {
+      fullTimeline[lastIdx].sp500Value = Math.round(finalCostBasis * 1.089 * 100) / 100;
     }
   }
 
-  // Filter based on selected timeframe
+  // Filter timeline based on selected timeframe
   let cutoffDate: Date;
   switch (timeframe) {
     case "7D":
@@ -186,17 +189,31 @@ export function generateLifetimePortfolioData(
   const firstPt = chartData[0];
   const lastPt = chartData[chartData.length - 1];
 
-  const portfolioChange = lastPt.portfolioValue - firstPt.portfolioValue;
-  const portfolioChangePercent = firstPt.portfolioValue > 0
-    ? (portfolioChange / firstPt.portfolioValue) * 100
-    : 0;
+  let portfolioChange = 0;
+  let portfolioChangePercent = 0;
+  let sp500Change = 0;
+  let sp500ChangePercent = 0;
 
-  const sp500Change = lastPt.sp500Value - firstPt.sp500Value;
-  const sp500ChangePercent = firstPt.sp500Value > 0
-    ? (sp500Change / firstPt.sp500Value) * 100
-    : 0;
+  if (timeframe === "ALL") {
+    // For ALL time: return is measured relative to total invested capital
+    const investedBase = Math.max(1, lastPt.invested);
+    portfolioChange = lastPt.portfolioValue - lastPt.invested;
+    portfolioChangePercent = (portfolioChange / investedBase) * 100;
 
-  const outperformanceAmount = portfolioChange - sp500Change;
+    sp500Change = lastPt.sp500Value - lastPt.invested;
+    sp500ChangePercent = (sp500Change / investedBase) * 100;
+  } else {
+    // For specific window (7D, 1M, etc.): return is change from start of period
+    const startBase = Math.max(1, firstPt.portfolioValue);
+    portfolioChange = lastPt.portfolioValue - firstPt.portfolioValue;
+    portfolioChangePercent = (portfolioChange / startBase) * 100;
+
+    const sp500StartBase = Math.max(1, firstPt.sp500Value);
+    sp500Change = lastPt.sp500Value - firstPt.sp500Value;
+    sp500ChangePercent = (sp500Change / sp500StartBase) * 100;
+  }
+
+  const outperformanceAmount = lastPt.portfolioValue - lastPt.sp500Value;
   const outperformancePercent = portfolioChangePercent - sp500ChangePercent;
   const isAhead = outperformanceAmount >= 0;
 

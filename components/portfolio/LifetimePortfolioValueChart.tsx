@@ -161,18 +161,24 @@ export default function LifetimePortfolioValueChart({
         </div>
 
         {/* Right: Date Range & Performance Badges */}
-        <div className="flex items-center gap-3 text-xs font-mono">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
           <span className="text-muted/80 font-medium">
             {summary.formattedRange}
           </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[#00b4d8] font-bold flex items-center gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[#00b4d8] font-bold flex items-center gap-1.5" title="Current Portfolio Value">
               <span className="w-2 h-2 rounded-full bg-[#00b4d8]" />
-              {formatSignedCurrency(summary.portfolioChange)}
+              <span>{formatCurrency(summary.portfolioEnd)}</span>
+              <span className={cn("text-[10px] px-1.5 py-0.2 rounded font-mono font-bold", summary.portfolioChangePercent >= 0 ? "bg-profit/15 text-profit" : "bg-loss/15 text-loss")}>
+                {summary.portfolioChangePercent >= 0 ? "+" : ""}{summary.portfolioChangePercent.toFixed(2)}%
+              </span>
             </span>
-            <span className="text-[#fb923c] font-bold flex items-center gap-1">
+            <span className="text-[#fb923c] font-bold flex items-center gap-1.5" title="S&P 500 Benchmark Equivalent">
               <span className="w-2 h-2 rounded-full bg-[#fb923c]" />
-              {formatSignedCurrency(summary.sp500Change)}
+              <span>{formatCurrency(summary.sp500End)}</span>
+              <span className={cn("text-[10px] px-1.5 py-0.2 rounded font-mono font-bold", summary.sp500ChangePercent >= 0 ? "bg-profit/15 text-profit" : "bg-loss/15 text-loss")}>
+                {summary.sp500ChangePercent >= 0 ? "+" : ""}{summary.sp500ChangePercent.toFixed(2)}%
+              </span>
             </span>
           </div>
         </div>
@@ -208,10 +214,10 @@ export default function LifetimePortfolioValueChart({
               tickFormatter={(val: string) => {
                 const d = new Date(val);
                 const month = d.toLocaleDateString("en-US", { month: "short" });
-                const year = d.toLocaleDateString("en-US", { year: "2-digit" });
-                return `${month} '${year}`;
+                const day = d.getDate();
+                return `${month} ${day}`;
               }}
-              minTickGap={45}
+              minTickGap={35}
             />
 
             <YAxis
