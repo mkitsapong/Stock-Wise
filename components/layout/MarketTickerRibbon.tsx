@@ -28,7 +28,7 @@ export default function MarketTickerRibbon() {
     async function fetchTickerQuotes() {
       try {
         const symbols = "^GSPC,^IXIC,BTC-USD,THB=X";
-        const res = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`);
+        const res = await fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}&range=1d&interval=1d`);
         if (!res.ok) return;
         const data = await res.json();
         const sparkData = data.spark?.result || [];
@@ -36,10 +36,19 @@ export default function MarketTickerRibbon() {
         if (sparkData.length > 0) {
           const updated = DEFAULT_TICKERS.map((item) => {
             const match = sparkData.find((s: any) => s.symbol === item.symbol);
-            if (match && match.response?.[0]?.meta) {
-              const meta = match.response[0].meta;
-              const price = meta.regularMarketPrice || item.price;
-              const prev = meta.chartPreviousClose || price;
+            if (match && match.response?.[0]) {
+              const resp = match.response[0];
+              const meta = resp.meta || {};
+              const indicators = resp.indicators;
+              const cleanCloses = (indicators?.quote?.[0]?.close || []).filter(
+                (p: any) => p !== null && !isNaN(p)
+              );
+              const price = meta.regularMarketPrice || (cleanCloses.length > 0 ? cleanCloses[cleanCloses.length - 1] : item.price);
+              let prev = meta.previousClose || meta.chartPreviousClose;
+              if (cleanCloses.length >= 2) {
+                prev = cleanCloses[cleanCloses.length - 2];
+              }
+              prev = prev || price;
               const change = price - prev;
               const changePercent = prev > 0 ? (change / prev) * 100 : 0;
               return { ...item, price, change, changePercent };

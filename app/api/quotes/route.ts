@@ -5,7 +5,7 @@ import { sanitizeSymbols } from '@/lib/security';
 const quoteCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS = 15000; // 15 seconds
 
-async function fetchChunk(symbols: string[], range: string = '7d', interval: string = '1d'): Promise<any[]> {
+async function fetchChunk(symbols: string[], range: string = '1d', interval: string = '1d'): Promise<any[]> {
   if (symbols.length === 0) return [];
   
   const symbolsParam = symbols.join(',');
@@ -55,7 +55,7 @@ async function fetchChunk(symbols: string[], range: string = '7d', interval: str
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbolsParam = searchParams.get('symbols');
-  const range = searchParams.get('range') || '7d';
+  const range = searchParams.get('range') || '1d';
   const interval = searchParams.get('interval') || '1d';
 
   if (!symbolsParam) {

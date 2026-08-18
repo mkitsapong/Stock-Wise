@@ -55,6 +55,12 @@ interface CandlestickChartProps {
   onTimeFrameChange?: (tf: string) => void;
   /** Optional action element to render in the header */
   headerAction?: React.ReactNode;
+  /** Optional meta info for live price and daily previous close */
+  meta?: {
+    regularMarketPrice?: number;
+    previousClose?: number;
+    chartPreviousClose?: number;
+  } | null;
 }
 
 export interface ActiveIndicators {
@@ -210,6 +216,7 @@ function calculateHeikinAshi(data: CandlestickDataPoint[]): CandlestickDataPoint
 
 export default function CandlestickChart({
   data,
+  meta,
   height = 420,
   showGrid = true,
   title,
@@ -763,12 +770,13 @@ export default function CandlestickChart({
     }
   }, [chartData, timeFrame, applyTimeFrameRange]);
 
-  // Real underlying summary stats
+  // Real underlying summary stats (consistent 1-day daily change)
   const realLastCandle = data.length > 0 ? data[data.length - 1] : null;
-  const realPrevCandle = data.length > 1 ? data[data.length - 2] : null;
-  const priceChange = realLastCandle && realPrevCandle ? realLastCandle.close - realPrevCandle.close : null;
+  const currentPrice = meta?.regularMarketPrice ?? realLastCandle?.close ?? null;
+  const prevClose = meta?.previousClose ?? (data.length > 1 ? data[data.length - 2].close : null);
+  const priceChange = currentPrice !== null && prevClose !== null ? currentPrice - prevClose : null;
   const priceChangePercent =
-    priceChange !== null && realPrevCandle ? (priceChange / realPrevCandle.close) * 100 : null;
+    priceChange !== null && prevClose !== null && prevClose > 0 ? (priceChange / prevClose) * 100 : null;
 
   return (
     <div className="glass-card p-5 sm:p-6 animate-fade-in-up opacity-0 stagger-2">
@@ -796,15 +804,15 @@ export default function CandlestickChart({
           </div>
 
           {/* Live Price Badge */}
-          {realLastCandle && (
+          {currentPrice !== null && (
             <div className="text-left sm:text-right">
               <p className="text-2xl sm:text-3xl font-extrabold font-mono text-foreground tracking-tight tabular-nums">
-                {formatCurrency(realLastCandle.close)}
+                {formatCurrency(currentPrice)}
               </p>
               {currency === "THB" && (
                 <p className="text-[11px] font-mono text-muted/80">
                   USD: $
-                  {realLastCandle.close.toLocaleString("en-US", {
+                  {currentPrice.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

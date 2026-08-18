@@ -26,6 +26,7 @@ export default function CandlestickSection() {
   const activeSymbol = urlSymbol || (portfolioSymbols.length > 0 ? portfolioSymbols[0].symbol : "AAPL");
 
   const [chartData, setChartData] = useState<any[]>([]);
+  const [chartMeta, setChartMeta] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeName, setActiveName] = useState<string>("");
@@ -55,11 +56,13 @@ export default function CandlestickSection() {
         
         setChartData(data.data || []);
         setActiveName(data.meta?.longName || activeSymbol);
+        setChartMeta(data.meta || null);
       } catch (err: any) {
         console.error(err);
         setError("Unable to load chart data.");
         setChartData([]);
         setActiveName(activeSymbol);
+        setChartMeta(null);
       } finally {
         setIsLoading(false);
       }
@@ -109,6 +112,7 @@ export default function CandlestickSection() {
             ) : (
               <CandlestickChart
                 data={chartData}
+                meta={chartMeta}
                 height={420}
                 symbol={activeSymbol}
                 title={`${activeName} · Historical Price Action`}

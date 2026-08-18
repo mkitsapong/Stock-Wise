@@ -27,23 +27,34 @@ export default function DashboardWatchlist({ className }: { className?: string }
     setIsLoading(true);
     const symbols = watchlist.map((w) => w.symbol).join(",");
     
-    fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}`)
+    fetch(`/api/quotes?symbols=${encodeURIComponent(symbols)}&range=1d&interval=1d`)
       .then((res) => res.json())
       .then((data) => {
         if (data.spark && data.spark.result) {
           const quotesMap: Record<string, WatchlistQuote> = {};
           data.spark.result.forEach((q: any) => {
-            const meta = q.response?.[0]?.meta || {};
+            const resp = q.response?.[0];
+            const meta = resp?.meta || {};
+            const indicators = resp?.indicators;
+            const cleanCloses = (indicators?.quote?.[0]?.close || []).filter(
+              (p: any) => p !== null && !isNaN(p)
+            );
+            const currentPrice = meta.regularMarketPrice || (cleanCloses.length > 0 ? cleanCloses[cleanCloses.length - 1] : 0);
+            let prevClose = meta.previousClose || meta.chartPreviousClose;
+            if (cleanCloses.length >= 2) {
+              prevClose = cleanCloses[cleanCloses.length - 2];
+            }
+
+            let changePercent = 0;
+            if (prevClose && currentPrice) {
+              changePercent = ((currentPrice - prevClose) / prevClose) * 100;
+            }
+
             quotesMap[q.symbol] = {
               symbol: q.symbol,
-              regularMarketPrice: meta.regularMarketPrice || 0,
-              regularMarketChangePercent: 0,
+              regularMarketPrice: currentPrice,
+              regularMarketChangePercent: changePercent,
             };
-            
-            if (meta.chartPreviousClose && meta.regularMarketPrice) {
-               quotesMap[q.symbol].regularMarketChangePercent = 
-                 ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100;
-            }
           });
           setQuotes(quotesMap);
         }

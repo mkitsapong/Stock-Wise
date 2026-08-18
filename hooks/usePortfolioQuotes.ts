@@ -56,7 +56,7 @@ export function usePortfolioQuotes() {
            return;
         }
         
-        const res = await fetch(`/api/quotes?symbols=${symbols}`);
+        const res = await fetch(`/api/quotes?symbols=${symbols}&range=1d&interval=1d`);
         if (!res.ok) throw new Error("Failed to fetch quotes");
         
         const data = await res.json();
@@ -73,12 +73,20 @@ export function usePortfolioQuotes() {
             
             let updatedHolding = { ...holding };
             
-            if (quoteData && quoteData.response && quoteData.response[0] && quoteData.response[0].meta) {
-              const meta = quoteData.response[0].meta;
-              const currentPrice = meta.regularMarketPrice;
-              const previousClose = meta.chartPreviousClose;
+            if (quoteData && quoteData.response && quoteData.response[0]) {
+              const resp = quoteData.response[0];
+              const meta = resp.meta || {};
+              const indicators = resp.indicators;
+              const cleanCloses = (indicators?.quote?.[0]?.close || []).filter(
+                (p: any) => p !== null && !isNaN(p)
+              );
+              const currentPrice = meta.regularMarketPrice ?? (cleanCloses.length > 0 ? cleanCloses[cleanCloses.length - 1] : undefined);
+              let previousClose = meta.previousClose || meta.chartPreviousClose;
+              if (cleanCloses.length >= 2) {
+                previousClose = cleanCloses[cleanCloses.length - 2];
+              }
               
-              if (currentPrice !== undefined && previousClose !== undefined) {
+              if (currentPrice !== undefined && previousClose !== undefined && previousClose > 0) {
                 const dayChange = currentPrice - previousClose;
                 const dayChangePercent = (dayChange / previousClose) * 100;
                 

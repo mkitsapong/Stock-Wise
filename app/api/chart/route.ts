@@ -104,6 +104,11 @@ export async function GET(request: Request) {
       return tA - tB;
     });
 
+    let dailyPreviousClose = meta.previousClose || meta.chartPreviousClose;
+    if (!isIntraday && cleanData.length >= 2) {
+      dailyPreviousClose = cleanData[cleanData.length - 2].close;
+    }
+
     return NextResponse.json({
       meta: {
         symbol: meta.symbol,
@@ -111,6 +116,7 @@ export async function GET(request: Request) {
         currency: meta.currency,
         regularMarketPrice: meta.regularMarketPrice,
         chartPreviousClose: meta.chartPreviousClose,
+        previousClose: dailyPreviousClose,
       },
       data: cleanData
     });

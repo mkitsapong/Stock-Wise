@@ -48,12 +48,20 @@ export default function WatchlistPage() {
           if (sparkInfo && sparkInfo.response && sparkInfo.response[0]) {
             const meta = sparkInfo.response[0].meta;
             const indicators = sparkInfo.response[0].indicators;
-            currentPrice = meta.regularMarketPrice || 0;
-            prevClose = meta.chartPreviousClose || currentPrice;
             sparklineData = indicators?.quote?.[0]?.close || [];
             
             // Clean up nulls in sparkline data
             sparklineData = sparklineData.filter((p: number | null) => p !== null && !isNaN(p)) as number[];
+
+            currentPrice = meta.regularMarketPrice || (sparklineData.length > 0 ? sparklineData[sparklineData.length - 1] : 0);
+            
+            // Calculate previous daily close (yesterday's close)
+            // In 7-day daily data, the last item is today's price and the item before it is yesterday's close
+            if (sparklineData.length >= 2) {
+              prevClose = sparklineData[sparklineData.length - 2];
+            } else {
+              prevClose = meta.previousClose || meta.chartPreviousClose || currentPrice;
+            }
 
             // Update name from Yahoo if not set
             if (!name || name === "Unknown Company" || name === "" || name === item.symbol) {
