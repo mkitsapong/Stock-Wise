@@ -9,9 +9,21 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   initialTransaction?: Transaction | null;
+  initialSymbol?: string;
+  initialPrice?: number;
+  initialName?: string;
+  initialType?: "BUY" | "SELL";
 }
 
-export default function AddTransactionModal({ isOpen, onClose, initialTransaction }: Props) {
+export default function AddTransactionModal({
+  isOpen,
+  onClose,
+  initialTransaction,
+  initialSymbol,
+  initialPrice,
+  initialName,
+  initialType,
+}: Props) {
   const { addTransaction, editTransaction, portfolios, activePortfolioId } = useTransactions();
   const { formatCurrency, currency, exchangeRate } = useCurrency();
 
@@ -37,27 +49,31 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
       setPrice(String(initialTransaction.price));
       setDate(initialTransaction.date);
     } else {
-      setType("BUY");
+      setType(initialType || "BUY");
       // Default to currently active portfolio, or first portfolio
       const defaultPort = activePortfolioId !== "ALL" ? activePortfolioId : portfolios[0]?.id || "growth";
       setPortfolioId(defaultPort);
-      setTxCurrency("USD");
-      setSymbol("");
-      setAssetName("");
+      const isThai = initialSymbol ? initialSymbol.toUpperCase().endsWith(".BK") : false;
+      setTxCurrency(isThai ? "THB" : "USD");
+      setSymbol(initialSymbol || "");
+      setAssetName(initialName || "");
       setShares("");
-      setPrice("");
+      setPrice(initialPrice && initialPrice > 0 ? String(initialPrice) : "");
       setDate(new Date().toISOString().split("T")[0]);
     }
-  }, [initialTransaction, isOpen, activePortfolioId, portfolios]);
+  }, [initialTransaction, initialSymbol, initialPrice, initialName, initialType, isOpen, activePortfolioId, portfolios]);
 
   // Auto-fetch company name based on symbol
   useEffect(() => {
     if (initialTransaction && initialTransaction.symbol === symbol.trim().toUpperCase()) {
       return;
     }
+    if (initialName && assetName === initialName) {
+      return;
+    }
 
     const timer = setTimeout(async () => {
-      if (symbol.trim().length > 0) {
+      if (symbol.trim().length > 0 && !assetName) {
         setIsSearching(true);
         try {
           const res = await fetch(`/api/search?q=${encodeURIComponent(symbol.trim())}`);
@@ -69,8 +85,6 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
               quotes[0];
             if (match) {
               setAssetName(match.shortname || match.longname || match.symbol);
-            } else {
-              setAssetName("");
             }
           }
         } catch (e) {
@@ -78,12 +92,10 @@ export default function AddTransactionModal({ isOpen, onClose, initialTransactio
         } finally {
           setIsSearching(false);
         }
-      } else {
-        setAssetName("");
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [symbol, initialTransaction]);
+  }, [symbol, initialTransaction, initialName, assetName]);
 
   if (!isOpen) return null;
 

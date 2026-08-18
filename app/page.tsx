@@ -9,9 +9,15 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text inline-block">
-            Dashboard
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text inline-block">
+              Dashboard
+            </h1>
+            <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+              <span>Market Live</span>
+            </span>
+          </div>
           <p className="text-sm text-muted mt-1 font-medium">
             Live Market Overview · {new Date().toLocaleDateString("en-US", {
               weekday: "long",

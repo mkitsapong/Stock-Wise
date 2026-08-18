@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useWatchlist } from "@/context/WatchlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
 import CompanyLogo from "@/components/common/CompanyLogo";
+import AddTransactionModal from "@/components/transactions/AddTransactionModal";
 import { cn, formatPercent } from "@/lib/utils";
 
 interface WatchlistQuote {
@@ -21,6 +22,12 @@ export default function DashboardWatchlist({ className }: { className?: string }
   const { formatCurrency } = useCurrency();
   const [quotes, setQuotes] = useState<Record<string, WatchlistQuote>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // 🚀 Quick Trade Modal State
+  const [tradeModalOpen, setTradeModalOpen] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState("");
+  const [selectedPrice, setSelectedPrice] = useState<number | undefined>(undefined);
+  const [selectedName, setSelectedName] = useState("");
 
   useEffect(() => {
     if (watchlist.length === 0) return;
@@ -163,19 +170,37 @@ export default function DashboardWatchlist({ className }: { className?: string }
                   </div>
                   
                   {quote ? (
-                    <div className="text-right flex flex-col items-end">
-                      <p className="text-xs font-bold font-mono text-foreground tabular-nums">
-                        {formatCurrency(quote.regularMarketPrice)}
-                      </p>
-                      <span className={cn(
-                        "text-[10px] font-bold font-mono px-1.5 py-0.2 rounded-md inline-flex items-center gap-0.5 mt-0.5 border tabular-nums",
-                        isPositive 
-                          ? "bg-profit/10 text-profit border-profit/20" 
-                          : "bg-loss/10 text-loss border-loss/20"
-                      )}>
-                        <span>{isPositive ? "▲" : "▼"}</span>
-                        <span>{formatPercent(changePct)}</span>
-                      </span>
+                    <div className="text-right flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSymbol(item.symbol);
+                          setSelectedPrice(quote.regularMarketPrice);
+                          setSelectedName(item.name);
+                          setTradeModalOpen(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-xs active:scale-95 cursor-pointer"
+                        title={`Quick Buy ${item.symbol}`}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19" />
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                      </button>
+                      <div className="flex flex-col items-end">
+                        <p className="text-xs font-bold font-mono text-foreground tabular-nums">
+                          {formatCurrency(quote.regularMarketPrice)}
+                        </p>
+                        <span className={cn(
+                          "text-[10px] font-bold font-mono px-1.5 py-0.2 rounded-md inline-flex items-center gap-0.5 mt-0.5 border tabular-nums",
+                          isPositive 
+                            ? "bg-profit/10 text-profit border-profit/20" 
+                            : "bg-loss/10 text-loss border-loss/20"
+                        )}>
+                          <span>{isPositive ? "▲" : "▼"}</span>
+                          <span>{formatPercent(changePct)}</span>
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <div className="w-14 h-6 skeleton-shimmer rounded-md" />
@@ -186,6 +211,16 @@ export default function DashboardWatchlist({ className }: { className?: string }
           </div>
         )}
       </div>
+
+      {/* 🚀 Quick Add Transaction Modal */}
+      <AddTransactionModal
+        isOpen={tradeModalOpen}
+        onClose={() => setTradeModalOpen(false)}
+        initialSymbol={selectedSymbol}
+        initialPrice={selectedPrice}
+        initialName={selectedName}
+        initialType="BUY"
+      />
     </div>
   );
 }

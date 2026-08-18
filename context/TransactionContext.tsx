@@ -267,9 +267,13 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
             portfolioId: t.portfolioId || "growth",
           }));
           setAllTransactions(normalized);
+        } else {
+          setAllTransactions([]);
         }
       } catch (e) {
         console.error("Failed to load local data", e);
+        setPortfolios(DEFAULT_PORTFOLIOS);
+        setAllTransactions([]);
       }
     }
 
@@ -281,15 +285,29 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
     loadData();
   }, [loadData]);
 
-  // Always save backup to localStorage so state is never lost across reloads
+  // When user logs out, clean in-memory state if no guest data exists
   useEffect(() => {
-    if (isLoaded) {
+    if (!user && isLoaded) {
+      try {
+        const savedTxs = localStorage.getItem("stockwise_transactions");
+        if (!savedTxs) {
+          setAllTransactions([]);
+          setPortfolios(DEFAULT_PORTFOLIOS);
+          setActivePortfolioIdState("ALL");
+        }
+      } catch (e) {}
+    }
+  }, [user, isLoaded]);
+
+  // Only save to localStorage in Guest mode (!user)
+  useEffect(() => {
+    if (isLoaded && !user) {
       try {
         localStorage.setItem("stockwise_transactions", JSON.stringify(allTransactions));
         localStorage.setItem("stockwise_portfolios", JSON.stringify(portfolios));
       } catch (e) {}
     }
-  }, [allTransactions, portfolios, isLoaded]);
+  }, [allTransactions, portfolios, isLoaded, user]);
 
   // 2. Portfolio Management Methods
   const addPortfolio = async (portfolioData: Omit<Portfolio, "id">): Promise<Portfolio> => {

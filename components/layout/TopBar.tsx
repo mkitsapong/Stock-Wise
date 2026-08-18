@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import CompanyLogo from "@/components/common/CompanyLogo";
 import CurrencySwitcher from "@/components/common/CurrencySwitcher";
 import PortfolioSwitcher from "@/components/portfolio/PortfolioSwitcher";
+import AddTransactionModal from "@/components/transactions/AddTransactionModal";
 import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/context/TransactionContext";
 
@@ -29,6 +30,11 @@ export default function TopBar() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // 🚀 Quick Trade Modal State
+  const [tradeModalOpen, setTradeModalOpen] = useState(false);
+  const [tradeModalSymbol, setTradeModalSymbol] = useState("");
+  const [tradeModalName, setTradeModalName] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -223,7 +229,7 @@ export default function TopBar() {
               ) : results.length > 0 ? (
                 <div className="max-h-[380px] overflow-y-auto divide-y divide-border/40 custom-scrollbar">
                   {results.map((item) => (
-                    <button
+                    <div
                       key={item.symbol}
                       onClick={() => {
                         setQuery(item.symbol);
@@ -246,8 +252,27 @@ export default function TopBar() {
                           <p className="text-xs text-muted truncate mt-0.5">{item.name}</p>
                         </div>
                       </div>
-                      <span className="text-xs text-muted font-mono flex-shrink-0 ml-2">{item.exchange}</span>
-                    </button>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsOpen(false);
+                            setTradeModalSymbol(item.symbol);
+                            setTradeModalName(item.name);
+                            setTradeModalOpen(true);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-white text-xs font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
+                          title={`Buy ${item.symbol}`}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                          <span>Buy</span>
+                        </button>
+                        <span className="text-xs text-muted font-mono">{item.exchange}</span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -388,6 +413,15 @@ export default function TopBar() {
           </div>
         </div>
       </div>
+
+      {/* 🚀 Quick Add Transaction Modal from Search */}
+      <AddTransactionModal
+        isOpen={tradeModalOpen}
+        onClose={() => setTradeModalOpen(false)}
+        initialSymbol={tradeModalSymbol}
+        initialName={tradeModalName}
+        initialType="BUY"
+      />
     </div>
   );
 }

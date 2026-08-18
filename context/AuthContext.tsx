@@ -19,6 +19,7 @@ interface AuthContextType {
     password: string
   ) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithFacebook: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -117,9 +118,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const signInWithFacebook = async () => {
+    if (!supabase) {
+      return { error: "Supabase is not configured yet." };
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
+      },
+    });
+    return { error: error ? error.message : null };
+  };
+
   const signOut = async () => {
     if (supabase) {
       await supabase.auth.signOut();
+    }
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("stockwise_transactions");
+        localStorage.removeItem("stockwise_portfolios");
+        localStorage.removeItem("stockwise_watchlist");
+        localStorage.removeItem("stockwise_active_portfolio_id");
+      } catch (e) {}
     }
     setUser(null);
     setSession(null);
@@ -139,6 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithEmail,
         signUpWithEmail,
         signInWithGoogle,
+        signInWithFacebook,
         signOut,
       }}
     >

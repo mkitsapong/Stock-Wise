@@ -95,33 +95,130 @@ export default function NewsPage() {
     return `${Math.floor(diff / 1440)}d ago`;
   }
 
+  // Sentiment statistics
+  const bullishCount = news.filter((n) => n.sentiment === "GOOD").length;
+  const bearishCount = news.filter((n) => n.sentiment === "BAD").length;
+  const neutralCount = news.filter((n) => n.sentiment === "NEUTRAL").length;
+  const bullishPercent = news.length > 0 ? Math.round((bullishCount / news.length) * 100) : 0;
+  const bearishPercent = news.length > 0 ? Math.round((bearishCount / news.length) * 100) : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 pb-12">
+      {/* 🌟 1. Standardized Page Header */}
       <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-            News Feed
-          </h1>
-          <p className="text-sm text-muted mt-1">
-            ข่าวเฉพาะหุ้นที่อยู่ใน Portfolio และ Watchlist ของคุณ
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text inline-block">
+              Market News
+            </h1>
+            <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+              <span>{news.length} Articles</span>
+            </span>
+          </div>
+          <p className="text-sm text-muted mt-1 font-medium">
+            Curated financial headlines & automated sentiment signal analysis for your active assets
           </p>
         </div>
-        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-accent/10 text-accent border border-accent/20">
-          {allSymbols.length} symbols · {news.length} articles
-        </span>
+
+        <div className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-card-bg border border-border/80 text-muted shadow-sm flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-profit animate-pulse" />
+          <span>Tracking {allSymbols.length} portfolio & watchlist symbols</span>
+        </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap gap-2 animate-fade-in-up opacity-0 stagger-1">
+      {/* 🌟 2. Hero KPI Sentiment & Coverage Cards (Matching Dashboard Style) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Card 1: Monitored Intelligence */}
+        <div className="p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group bg-gradient-to-br from-accent/15 via-card-bg to-purple-500/10 border border-accent/30 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:border-accent/50 stagger-1">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none bg-accent/25 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">
+              Market Intelligence Feed
+            </span>
+            <span className="p-2 rounded-xl border bg-accent/10 text-accent border-accent/20 group-hover:scale-105 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+                <path d="M18 14h-8" />
+                <path d="M15 18h-5" />
+                <path d="M10 6h8v4h-8V6Z" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-foreground flex items-baseline gap-2">
+              <span>{news.length}</span>
+              <span className="text-sm font-sans font-medium text-muted">Headlines Cached</span>
+            </div>
+          </div>
+          <div className="relative z-10 mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+            <span>{portfolioCount} Portfolio · {watchlistCount} Watchlist</span>
+          </div>
+        </div>
+
+        {/* Card 2: Bullish Momentum */}
+        <div className="glass-card p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group hover:border-border/80 stagger-2">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none bg-profit/20 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              Bullish News Bias
+            </span>
+            <span className="p-2 rounded-xl border bg-profit/10 text-profit border-profit/20 group-hover:scale-105 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-profit">
+              {bullishPercent}%
+            </span>
+            <span className="text-sm font-sans font-semibold text-muted">Positive Signal</span>
+          </div>
+          <div className="relative z-10 mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+            <span className="font-mono font-bold text-profit">{bullishCount}</span> articles with bullish keywords
+          </div>
+        </div>
+
+        {/* Card 3: Bearish & Risk Signals */}
+        <div className="glass-card p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group hover:border-border/80 stagger-3">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none bg-loss/15 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              Risk & Bearish Bias
+            </span>
+            <span className="p-2 rounded-xl border bg-loss/10 text-loss border-loss/20 group-hover:scale-105 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                <polyline points="17 18 23 18 23 12" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10 flex items-baseline gap-2">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-loss">
+              {bearishPercent}%
+            </span>
+            <span className="text-sm font-sans font-semibold text-muted">Cautious Bias</span>
+          </div>
+          <div className="relative z-10 mt-1.5 flex items-center gap-1.5 text-xs text-muted">
+            <span>{bearishCount} bearish · {neutralCount} neutral articles</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 🌟 3. Filter Bar (Segmented Controls) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 animate-fade-in-up opacity-0 stagger-1">
         {/* Source filter */}
-        <div className="flex items-center gap-1 p-1 bg-card-bg border border-border/60 rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm">
           {(["ALL", "PORTFOLIO", "WATCHLIST"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                filter === f ? "bg-accent text-white shadow-sm" : "text-muted hover:text-foreground"
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+                filter === f
+                  ? "bg-accent text-white shadow-md shadow-accent/25 scale-[1.02]"
+                  : "text-muted hover:text-foreground hover:bg-white/5"
               }`}
             >
               {f === "ALL" ? `All (${news.length})` : f === "PORTFOLIO" ? `Portfolio (${portfolioCount})` : `Watchlist (${watchlistCount})`}
@@ -130,7 +227,7 @@ export default function NewsPage() {
         </div>
 
         {/* Sentiment filter */}
-        <div className="flex items-center gap-1 p-1 bg-card-bg border border-border/60 rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm">
           {([
             { key: "ALL", label: "All Sentiment", color: "" },
             { key: "GOOD", label: "🟢 Bullish", color: "text-profit" },
@@ -140,8 +237,10 @@ export default function NewsPage() {
             <button
               key={key}
               onClick={() => setSentimentFilter(key)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                sentimentFilter === key ? "bg-accent text-white shadow-sm" : `${color} hover:text-foreground`
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+                sentimentFilter === key
+                  ? "bg-accent text-white shadow-md shadow-accent/25 scale-[1.02]"
+                  : `${color} hover:text-foreground hover:bg-white/5`
               }`}
             >
               {label}
@@ -152,25 +251,26 @@ export default function NewsPage() {
 
       {/* Empty State */}
       {allSymbols.length === 0 && (
-        <div className="glass-card p-12 text-center flex flex-col items-center gap-4 border-dashed">
-          <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
-            <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="glass-card p-12 text-center flex flex-col items-center gap-4 border-dashed animate-fade-in-up opacity-0 relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-accent/10 rounded-full blur-[50px] pointer-events-none" />
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shadow-lg shadow-accent/10">
+            <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 13h6M9 17h4" />
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-foreground">ยังไม่มีหุ้นในพอร์ต</h3>
-            <p className="text-sm text-muted mt-1">เพิ่มหุ้นใน Portfolio หรือ Watchlist ก่อนเพื่อดูข่าว</p>
+            <h3 className="text-xl font-bold text-foreground mb-1">No Assets Tracked Yet</h3>
+            <p className="text-sm text-muted max-w-sm">Add stocks to your Portfolio or Watchlist to automatically fetch live financial news and AI sentiment signals.</p>
           </div>
         </div>
       )}
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="glass-card p-5 space-y-3 animate-pulse">
+            <div key={i} className="glass-card p-5 space-y-3">
               <div className="flex gap-2 items-center">
                 <div className="w-8 h-8 rounded-lg skeleton-shimmer" />
                 <div className="w-16 h-3 skeleton-shimmer rounded" />
@@ -185,46 +285,53 @@ export default function NewsPage() {
 
       {/* News Grid */}
       {!isLoading && filtered.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up opacity-0 stagger-2">
           {filtered.map((item) => (
             <a
               key={item.uuid}
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-card p-5 flex flex-col gap-3 hover:border-accent/40 transition-all duration-200 group hover:shadow-lg hover:shadow-accent/5 hover:-translate-y-0.5"
+              className="glass-card p-5 flex flex-col gap-3 hover:border-accent/40 transition-all duration-300 group hover:shadow-xl hover:shadow-accent/5 hover:-translate-y-1 relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-bl-full blur-2xl pointer-events-none group-hover:bg-accent/15 transition-all" />
+
               {/* Symbol Tag + Sentiment */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-2">
                   <CompanyLogo symbol={item.symbol} size="sm" className="rounded-lg" />
                   <div>
                     <span className="text-xs font-bold text-accent font-mono">{item.symbol}</span>
-                    <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-md font-semibold ${
+                    <span className={`ml-2 text-[10px] px-2 py-0.5 rounded-md font-mono font-bold uppercase border ${
                       item.source === "PORTFOLIO"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                     }`}>
                       {item.source === "PORTFOLIO" ? "Portfolio" : "Watchlist"}
                     </span>
                   </div>
                 </div>
-                <span className={`text-sm ${
-                  item.sentiment === "GOOD" ? "text-profit" : item.sentiment === "BAD" ? "text-loss" : "text-muted"
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                  item.sentiment === "GOOD"
+                    ? "bg-profit/10 text-profit border-profit/20"
+                    : item.sentiment === "BAD"
+                    ? "bg-loss/10 text-loss border-loss/20"
+                    : "bg-muted-bg text-muted border-border/60"
                 }`}>
-                  {item.sentiment === "GOOD" ? "🟢" : item.sentiment === "BAD" ? "🔴" : "⚪"}
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {item.sentiment === "GOOD" ? "Bullish" : item.sentiment === "BAD" ? "Bearish" : "Neutral"}
                 </span>
               </div>
 
               {/* Title */}
-              <h3 className="text-sm font-semibold text-foreground leading-snug group-hover:text-accent transition-colors line-clamp-3">
+              <h3 className="text-sm font-semibold text-foreground leading-snug group-hover:text-accent transition-colors line-clamp-3 relative z-10">
                 {item.title}
               </h3>
 
               {/* Footer */}
-              <div className="flex items-center justify-between mt-auto pt-1">
-                <span className="text-[10px] text-muted truncate max-w-[70%]">{item.publisher}</span>
-                <span className="text-[10px] text-muted/60">{timeAgo(item.providerPublishTime)}</span>
+              <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/40 relative z-10">
+                <span className="text-[11px] text-muted font-medium truncate max-w-[65%]">{item.publisher}</span>
+                <span className="text-[10px] font-mono text-muted/80">{timeAgo(item.providerPublishTime)}</span>
               </div>
             </a>
           ))}
@@ -233,8 +340,8 @@ export default function NewsPage() {
 
       {/* No Results */}
       {!isLoading && allSymbols.length > 0 && filtered.length === 0 && (
-        <div className="glass-card p-10 text-center text-muted">
-          <p className="text-sm">ไม่พบข่าวสำหรับ filter ที่เลือก</p>
+        <div className="glass-card p-12 text-center text-muted animate-fade-in-up">
+          <p className="text-sm font-medium">No news articles match the selected source or sentiment filters.</p>
         </div>
       )}
     </div>

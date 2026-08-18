@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q');
+  const rawQuery = searchParams.get('q');
 
-  if (!query) {
+  if (!rawQuery || typeof rawQuery !== 'string' || rawQuery.trim().length === 0) {
     return NextResponse.json({ quotes: [] });
   }
+
+  const query = rawQuery.trim().slice(0, 100);
 
   try {
     const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`;

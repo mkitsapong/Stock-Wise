@@ -13,9 +13,11 @@ export async function POST(request: Request) {
   try {
     const { message, holdings, portfolioStats, currency, exchangeRate } = await request.json();
 
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Missing message' }, { status: 400 });
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return NextResponse.json({ error: 'Missing or empty message' }, { status: 400 });
     }
+
+    const cleanMessage = message.trim().slice(0, 2000);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -60,7 +62,7 @@ ${holdingsText}
 - ถ้าถามเรื่องการซื้อ/ขาย ให้วิเคราะห์จาก P/L และ % gain/loss ของแต่ละตัว`;
 
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `${systemPrompt}\n\n**คำถามจาก user:** ${message.trim()}`;
+    const prompt = `${systemPrompt}\n\n**คำถามจาก user:** ${cleanMessage}`;
 
     let lastError: any = null;
     for (const modelName of CANDIDATE_MODELS) {

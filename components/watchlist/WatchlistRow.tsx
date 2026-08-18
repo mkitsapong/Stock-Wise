@@ -11,9 +11,10 @@ import CompanyLogo from "@/components/common/CompanyLogo";
 interface Props {
   item: any;
   index: number;
+  onQuickBuy?: (symbol: string, price: number, name?: string) => void;
 }
 
-export default function WatchlistRow({ item, index }: Props) {
+export default function WatchlistRow({ item, index, onQuickBuy }: Props) {
   const router = useRouter();
   const { removeFromWatchlist, updateTargetPrice } = useWatchlist();
   const { formatCurrency, formatSignedCurrency } = useCurrency();
@@ -196,6 +197,24 @@ export default function WatchlistRow({ item, index }: Props) {
       {/* Actions */}
       <td className="py-3.5 px-4 align-middle text-right">
         <div className="flex items-center justify-end gap-1.5">
+          {/* 🚀 Quick Buy Action */}
+          {onQuickBuy && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickBuy(item.symbol, item.currentPrice, item.name);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 shadow-xs cursor-pointer hover:scale-105 active:scale-95 text-xs font-semibold"
+              title={`Quick Buy ${item.symbol}`}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              <span>Buy</span>
+            </button>
+          )}
+
           <button 
             onClick={(e) => {
               e.stopPropagation();

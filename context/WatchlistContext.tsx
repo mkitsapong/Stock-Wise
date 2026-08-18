@@ -86,9 +86,12 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
         const saved = localStorage.getItem("stockwise_watchlist");
         if (saved) {
           setWatchlist(JSON.parse(saved));
+        } else {
+          setWatchlist([]);
         }
       } catch (e) {
         console.error("Failed to load watchlist", e);
+        setWatchlist([]);
       }
     }
 
@@ -99,6 +102,18 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadWatchlist();
   }, [loadWatchlist]);
+
+  // When user logs out, clean in-memory state if no guest data exists
+  useEffect(() => {
+    if (!user && isLoaded) {
+      try {
+        const saved = localStorage.getItem("stockwise_watchlist");
+        if (!saved) {
+          setWatchlist([]);
+        }
+      } catch (e) {}
+    }
+  }, [user, isLoaded]);
 
   // Save to localStorage when in Guest mode
   useEffect(() => {

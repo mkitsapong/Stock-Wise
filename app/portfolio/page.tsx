@@ -109,79 +109,137 @@ export default function PortfolioPage() {
   ];
 
   return (
-    <div className="space-y-5 pb-12">
-      
-      {/* 🌟 1. Premium Hero Header Card */}
-      <div className="glass-card p-5 sm:p-6 rounded-3xl border border-border/80 relative overflow-hidden shadow-xl animate-fade-in-up">
-        {/* Ambient Gradient Glows */}
-        <div className="absolute top-0 right-1/4 w-80 h-36 bg-accent/15 rounded-full blur-[60px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-64 h-32 bg-purple-500/10 rounded-full blur-[50px] pointer-events-none" />
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          {/* Title & Badge */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                Portfolio Hub
-              </span>
-              <span className="text-muted/60 text-xs">•</span>
-              <span className="text-xs text-muted font-medium">
-                {holdings.length} Assets Tracked
-              </span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Portfolio Analytics
+    <div className="space-y-6 pb-12">
+      {/* 🌟 1. Standardized Page Header */}
+      <div className="animate-fade-in-up opacity-0 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight gradient-text inline-block">
+              Portfolio
             </h1>
-            <p className="text-xs sm:text-sm text-muted font-medium">
-              Comprehensive performance heatmap, lifetime returns, AI doctor & risk diversification
-            </p>
+            <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+              <span>{holdings.length} {holdings.length === 1 ? "Asset" : "Assets"}</span>
+            </span>
           </div>
+          <p className="text-sm text-muted mt-1 font-medium">
+            Track performance heatmap, lifetime returns, AI diagnosis & risk diversification
+          </p>
+        </div>
 
-          {/* Quick Metrics Chips */}
-          <div className="flex flex-wrap items-center gap-2 pt-1 md:pt-0">
-            {/* Total Value Chip */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card-bg/80 border border-border/60 shadow-sm text-xs font-mono">
-              <span className="text-muted font-sans text-[11px]">Value:</span>
-              <span className="font-extrabold text-foreground tabular-nums">
-                {formatCurrency(totalValue)}
-              </span>
+        {/* Strategy Switcher Bar */}
+        <div className="shrink-0">
+          <PortfolioSwitcher variant="tabs" />
+        </div>
+      </div>
+
+      {/* 🌟 2. Hero KPI Cards Grid (Matching Dashboard Style) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Card 1: Total Value */}
+        <div className="p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group bg-gradient-to-br from-accent/15 via-card-bg to-purple-500/10 border border-accent/30 shadow-[0_4px_24px_rgba(99,102,241,0.12)] hover:border-accent/50 stagger-1">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none bg-accent/25 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">
+              Total Portfolio Value
+            </span>
+            <span className="p-2 rounded-xl border bg-accent/10 text-accent border-accent/20 group-hover:scale-105 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-foreground">
+              {formatCurrency(totalValue)}
             </div>
-
-            {/* Total Return Chip */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card-bg/80 border border-border/60 shadow-sm text-xs font-mono">
-              <span className="text-muted font-sans text-[11px]">Total Return:</span>
-              <span className={cn(
-                "font-bold tabular-nums flex items-center gap-1",
-                isPositive ? "text-profit" : "text-loss"
-              )}>
-                <span>{isPositive ? "▲" : "▼"}</span>
-                <span>{formatSignedCurrency(unrealizedPL)}</span>
-                <span className="opacity-80">({formatPercent(returnPercent)})</span>
-              </span>
-            </div>
-
-            {/* Health Score Chip */}
-            {health.score > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card-bg/80 border border-border/60 shadow-sm text-xs font-mono">
-                <span className="text-muted font-sans text-[11px]">Health:</span>
-                <span className={cn(
-                  "font-bold px-1.5 py-0.2 rounded text-[10px] uppercase border",
-                  health.score >= 80 ? "bg-profit/10 text-profit border-profit/20" :
-                  health.score >= 60 ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
-                  "bg-loss/10 text-loss border-loss/20"
-                )}>
-                  {health.score}/100 ({health.grade})
-                </span>
-              </div>
-            )}
+          </div>
+          <div className="relative z-10 mt-1.5">
+            <span className="text-xs text-muted font-medium">
+              Cost Basis: {formatCurrency(totalCost)}
+            </span>
           </div>
         </div>
 
-        {/* 💼 Strategy Portfolio Switcher Bar */}
-        <div className="mt-5 pt-4 border-t border-border/50 relative z-10">
-          <PortfolioSwitcher variant="tabs" />
+        {/* Card 2: Unrealized P/L */}
+        <div className="glass-card p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group hover:border-border/80 stagger-2">
+          <div className={cn(
+            "absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity",
+            isPositive ? "bg-profit/20" : "bg-loss/20"
+          )} />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              Unrealized Return
+            </span>
+            <span className={cn(
+              "p-2 rounded-xl border group-hover:scale-105 transition-transform",
+              isPositive
+                ? "bg-profit/10 text-profit border-profit/20"
+                : "bg-loss/10 text-loss border-loss/20"
+            )}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                <polyline points="16 7 22 7 22 13" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10">
+            <div className={cn(
+              "text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums",
+              isPositive ? "text-profit" : "text-loss"
+            )}>
+              {formatSignedCurrency(unrealizedPL)}
+            </div>
+          </div>
+          <div className="relative z-10 mt-1.5 flex items-center gap-1.5">
+            <span className={cn(
+              "text-xs font-mono font-bold px-1.5 py-0.5 rounded-md",
+              isPositive ? "bg-profit/10 text-profit" : "bg-loss/10 text-loss"
+            )}>
+              {formatPercent(returnPercent)}
+            </span>
+            <span className="text-xs text-muted">all time</span>
+          </div>
+        </div>
+
+        {/* Card 3: Health Score & Asset Count */}
+        <div className="glass-card p-5 rounded-2xl animate-fade-in-up opacity-0 relative overflow-hidden transition-all duration-300 group hover:border-border/80 stagger-3">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full blur-[40px] pointer-events-none bg-accent/20 opacity-50 group-hover:opacity-100 transition-opacity" />
+          <div className="flex items-center justify-between mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              Health & Diversification
+            </span>
+            <span className="p-2 rounded-xl border bg-accent/10 text-accent border-accent/20 group-hover:scale-105 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+              </svg>
+            </span>
+          </div>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-foreground flex items-baseline gap-2">
+              <span>{health.score > 0 ? health.score : "—"}</span>
+              {health.score > 0 && (
+                <span className="text-sm font-sans font-semibold text-muted">/ 100</span>
+              )}
+            </div>
+          </div>
+          <div className="relative z-10 mt-1.5 flex items-center gap-2">
+            {health.score > 0 ? (
+              <span className={cn(
+                "text-[10px] font-bold uppercase px-2 py-0.5 rounded-md border font-mono",
+                health.score >= 80 ? "bg-profit/10 text-profit border-profit/20" :
+                health.score >= 60 ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                "bg-loss/10 text-loss border-loss/20"
+              )}>
+                Grade: {health.grade}
+              </span>
+            ) : (
+              <span className="text-xs text-muted">No holdings</span>
+            )}
+            <span className="text-xs text-muted">
+              · {dividendCount} dividend {dividendCount === 1 ? 'payer' : 'payers'}
+            </span>
+          </div>
         </div>
       </div>
 
