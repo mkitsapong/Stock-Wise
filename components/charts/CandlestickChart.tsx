@@ -892,15 +892,15 @@ export default function CandlestickChart({
         </div>
 
         {/* Technical Indicators Pill Bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="hidden sm:inline-block text-[10px] font-bold text-muted uppercase tracking-wider mr-1">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none max-w-full pb-1">
+          <span className="hidden sm:inline-block text-[10px] font-bold text-muted uppercase tracking-wider mr-1 shrink-0">
             Indicators:
           </span>
           {/* EMA 50 */}
           <button
             onClick={() => toggleIndicator("ema50")}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer shrink-0 whitespace-nowrap",
               indicators.ema50 && latestEMA50 !== null
                 ? "bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-xs"
                 : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"
@@ -917,7 +917,7 @@ export default function CandlestickChart({
           <button
             onClick={() => toggleIndicator("ema100")}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer shrink-0 whitespace-nowrap",
               indicators.ema100 && latestEMA100 !== null
                 ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 shadow-xs"
                 : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"
@@ -934,7 +934,7 @@ export default function CandlestickChart({
           <button
             onClick={() => toggleIndicator("ema200")}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer shrink-0 whitespace-nowrap",
               indicators.ema200 && latestEMA200 !== null
                 ? "bg-purple-500/10 text-purple-400 border-purple-500/30 shadow-xs"
                 : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"
@@ -951,7 +951,7 @@ export default function CandlestickChart({
           <button
             onClick={() => toggleIndicator("bb")}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer shrink-0 whitespace-nowrap",
               indicators.bb && bbData.middle.length > 0
                 ? "bg-sky-500/10 text-sky-400 border-sky-500/30 shadow-xs"
                 : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"
@@ -965,7 +965,7 @@ export default function CandlestickChart({
           <button
             onClick={() => toggleIndicator("rsi")}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold font-mono transition-all border cursor-pointer shrink-0 whitespace-nowrap",
               indicators.rsi && latestRSI !== null
                 ? "bg-pink-500/10 text-pink-400 border-pink-500/30 shadow-xs"
                 : "bg-muted-bg/30 text-muted/70 border-border/40 hover:text-foreground hover:bg-muted-bg/60"

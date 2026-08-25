@@ -208,14 +208,14 @@ export default function NewsPage() {
       </div>
 
       {/* 🌟 3. Filter Bar (Segmented Controls) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 animate-fade-in-up opacity-0 stagger-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in-up opacity-0 stagger-1">
         {/* Source filter */}
-        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm overflow-x-auto scrollbar-none max-w-full shrink-0">
           {(["ALL", "PORTFOLIO", "WATCHLIST"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer shrink-0 whitespace-nowrap ${
                 filter === f
                   ? "bg-accent text-white shadow-md shadow-accent/25 scale-[1.02]"
                   : "text-muted hover:text-foreground hover:bg-white/5"
@@ -227,7 +227,7 @@ export default function NewsPage() {
         </div>
 
         {/* Sentiment filter */}
-        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-1 p-1 bg-card-bg/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-sm overflow-x-auto scrollbar-none max-w-full">
           {([
             { key: "ALL", label: "All Sentiment", color: "" },
             { key: "GOOD", label: "🟢 Bullish", color: "text-profit" },
@@ -237,7 +237,7 @@ export default function NewsPage() {
             <button
               key={key}
               onClick={() => setSentimentFilter(key)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all duration-200 cursor-pointer shrink-0 whitespace-nowrap ${
                 sentimentFilter === key
                   ? "bg-accent text-white shadow-md shadow-accent/25 scale-[1.02]"
                   : `${color} hover:text-foreground hover:bg-white/5`

@@ -113,24 +113,24 @@ export default function PortfolioChat() {
         id="portfolio-chat-btn"
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 group",
+          "fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 md:z-50 w-13 h-13 sm:w-14 sm:h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 group cursor-pointer",
           "bg-gradient-to-br from-accent to-purple-500 hover:scale-110 active:scale-95",
           isOpen && "opacity-0 pointer-events-none scale-75"
         )}
         title="AI Portfolio Chat"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           <path d="M8 10h8" />
           <path d="M8 14h5" />
         </svg>
         {/* Pulse ring */}
-        <span className="absolute inset-0 rounded-2xl bg-accent/40 animate-ping opacity-75" />
+        <span className="absolute inset-0 rounded-2xl bg-accent/40 animate-ping opacity-75 pointer-events-none" />
       </button>
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-5rem)] flex flex-col rounded-3xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl animate-fade-in-up overflow-hidden">
+        <div className="fixed bottom-20 md:bottom-6 right-3 sm:right-4 md:right-6 left-3 sm:left-auto z-50 md:w-[400px] max-w-[calc(100vw-1.5rem)] h-[580px] max-h-[calc(100vh-6.5rem)] md:max-h-[640px] flex flex-col rounded-3xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl animate-fade-in-up overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50 bg-gradient-to-r from-accent/10 to-purple-500/10 flex-shrink-0">
             <div className="flex items-center gap-3">

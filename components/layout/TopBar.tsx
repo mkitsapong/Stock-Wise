@@ -178,10 +178,10 @@ export default function TopBar() {
         </div>
 
         {/* Search Section */}
-        <div className="relative w-full max-w-xl flex-[2] md:flex-none" ref={containerRef}>
+        <div className="relative w-full max-w-xl flex-[2] md:flex-none min-w-0" ref={containerRef}>
           <div className="relative flex items-center group">
             <svg
-              className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors"
+              className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors pointer-events-none"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -197,8 +197,8 @@ export default function TopBar() {
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              placeholder="Search stocks, indices, funds (e.g. AAPL, NVDA, PTT.BK)..."
-              className="w-full rounded-xl border border-border/80 bg-card-bg/60 py-2 pl-10 pr-16 text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-border placeholder:text-muted/60"
+              placeholder="Search stocks (AAPL, NVDA, PTT)..."
+              className="w-full rounded-xl border border-border/80 bg-card-bg/60 py-2 pl-10 pr-14 sm:pr-16 text-xs sm:text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-border placeholder:text-muted/60 truncate"
             />
             <div className="absolute right-2.5 flex items-center gap-1.5">
               {query && (
@@ -207,7 +207,7 @@ export default function TopBar() {
                     setQuery("");
                     setResults([]);
                   }}
-                  className="p-1 text-muted hover:text-foreground text-xs rounded-md"
+                  className="p-1 text-muted hover:text-foreground text-xs rounded-md cursor-pointer"
                 >
                   ✕
                 </button>
@@ -220,7 +220,7 @@ export default function TopBar() {
 
           {/* Search Dropdown */}
           {isOpen && (debouncedQuery.trim() || isLoading) && (
-            <div className="absolute left-0 right-0 top-full mt-2 rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+            <div className="absolute left-0 right-0 top-full mt-2 w-full max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
               {isLoading ? (
                 <div className="flex items-center justify-center p-6 text-sm text-muted">
                   <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mr-2" />
@@ -337,7 +337,7 @@ export default function TopBar() {
 
             {/* Profile Dropdown Menu */}
             {isProfileOpen && user && (
-              <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-2 shadow-2xl animate-fade-in-up z-50">
+              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-2 shadow-2xl animate-fade-in-up z-50">
                 <div className="px-3 py-3 border-b border-border/40 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
                     {userAvatarUrl ? (

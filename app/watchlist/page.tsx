@@ -160,23 +160,23 @@ export default function WatchlistPage() {
         </div>
         
         {/* Quick Add Form */}
-        <form onSubmit={handleAddSymbol} className="flex items-center gap-2">
-          <div className="relative">
-             <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <form onSubmit={handleAddSymbol} className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+             <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                <circle cx="11" cy="11" r="8" />
                <line x1="21" y1="21" x2="16.65" y2="16.65" />
              </svg>
              <input 
                type="text" 
                placeholder="Add ticker (e.g. NVDA, PTT.BK)..." 
-               className="pl-9 pr-3 py-2.5 bg-card-bg border border-border/80 rounded-xl text-sm font-medium text-foreground outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 w-[220px] sm:w-[260px] transition-all shadow-sm"
+               className="pl-9 pr-3 py-2.5 bg-card-bg border border-border/80 rounded-xl text-sm font-medium text-foreground outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 w-full sm:w-[220px] md:w-[260px] transition-all shadow-sm"
                value={newSymbol}
                onChange={e => setNewSymbol(e.target.value)}
              />
           </div>
           <button 
             type="submit" 
-            className="btn-shine-sweep px-4 py-2.5 bg-gradient-to-r from-accent to-purple-500 hover:from-accent/90 hover:to-purple-500/90 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+            className="btn-shine-sweep px-4 py-2.5 bg-gradient-to-r from-accent to-purple-500 hover:from-accent/90 hover:to-purple-500/90 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0" 
             disabled={!newSymbol.trim()}
           >
             + Add
