@@ -246,7 +246,11 @@ export default function LifetimePortfolioValueChart({
                   year: "numeric",
                 });
 
-                const diff = orig.portfolioValue - orig.sp500Value;
+                // Fix #4: use display values (currency-aware) instead of raw USD
+                const displayPort = orig.displayPortfolio ?? orig.portfolioValue;
+                const displaySp = orig.displaySp500 ?? orig.sp500Value;
+                const displayInv = orig.displayInvested ?? orig.invested;
+                const diff = displayPort - displaySp;
                 const isPos = diff >= 0;
 
                 return (
@@ -262,7 +266,7 @@ export default function LifetimePortfolioValueChart({
                           Portfolio
                         </span>
                         <span className="font-bold text-foreground text-sm tabular-nums">
-                          {formatCurrency(orig.portfolioValue)}
+                          {formatCurrency(displayPort)}
                         </span>
                       </div>
 
@@ -272,7 +276,7 @@ export default function LifetimePortfolioValueChart({
                           S&P 500
                         </span>
                         <span className="font-bold text-[#fb923c] tabular-nums">
-                          {formatCurrency(orig.sp500Value)}
+                          {formatCurrency(displaySp)}
                         </span>
                       </div>
 
@@ -282,7 +286,7 @@ export default function LifetimePortfolioValueChart({
                           Invested
                         </span>
                         <span className="font-bold text-[#a855f7] tabular-nums">
-                          {formatCurrency(orig.invested)}
+                          {formatCurrency(displayInv)}
                         </span>
                       </div>
                     </div>
@@ -290,7 +294,7 @@ export default function LifetimePortfolioValueChart({
                     <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
                       <span className="text-muted font-sans">Vs. S&P 500:</span>
                       <span className={cn("font-bold", isPos ? "text-profit" : "text-loss")}>
-                        {isPos ? "+" : ""}{formatCurrency(diff)} ({isPos ? "+" : ""}{((diff / orig.sp500Value) * 100).toFixed(1)}%)
+                        {isPos ? "+" : ""}{formatCurrency(diff)} ({isPos ? "+" : ""}{(displaySp > 0 ? (diff / displaySp) * 100 : 0).toFixed(1)}%)
                       </span>
                     </div>
                   </div>
