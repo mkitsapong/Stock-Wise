@@ -14,6 +14,7 @@ import {
 import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
 import { useTransactions } from "@/context/TransactionContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useHistoricalQuotes } from "@/hooks/useHistoricalQuotes";
 import {
   generateLifetimePortfolioData,
   LifetimeTimeFrame,
@@ -38,16 +39,28 @@ export default function LifetimePortfolioValueChart({
   const { portfolioStats } = usePortfolioQuotes();
   const { formatCurrency, formatSignedCurrency, currency, exchangeRate, currencySymbol } = useCurrency();
 
-  // Generate historical data
+  // Extract unique symbols from transactions to fetch historical daily price maps
+  const uniqueSymbols = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of transactions) {
+      if (t.symbol) set.add(t.symbol.toUpperCase());
+    }
+    return Array.from(set);
+  }, [transactions]);
+
+  const { priceHistoryMap, isLoading: isHistoricalLoading } = useHistoricalQuotes(uniqueSymbols);
+
+  // Generate historical data with real daily market close prices
   const { data: rawData, summary } = useMemo(
     () =>
       generateLifetimePortfolioData(
         transactions,
         portfolioStats.totalValue,
         portfolioStats.totalCost,
-        timeframe
+        timeframe,
+        priceHistoryMap
       ),
-    [transactions, portfolioStats.totalValue, portfolioStats.totalCost, timeframe]
+    [transactions, portfolioStats.totalValue, portfolioStats.totalCost, timeframe, priceHistoryMap]
   );
 
   // Convert values according to active currency
@@ -95,6 +108,12 @@ export default function LifetimePortfolioValueChart({
         </div>
 
         <div className="flex items-center gap-2">
+          {isHistoricalLoading && (
+            <span className="flex items-center gap-1.5 text-[11px] font-mono text-muted/80 bg-muted-bg/60 px-2.5 py-0.5 rounded-lg border border-border/40 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00b4d8]" />
+              Syncing historical prices...
+            </span>
+          )}
           <button
             type="button"
             className="p-1.5 text-muted hover:text-foreground hover:bg-muted-bg/50 rounded-xl transition-all cursor-pointer"

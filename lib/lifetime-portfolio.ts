@@ -1,6 +1,7 @@
 import { Transaction } from "@/context/TransactionContext";
 
 export type LifetimeTimeFrame = "7D" | "1M" | "3M" | "6M" | "YTD" | "1Y" | "5Y" | "ALL";
+export type DailyPriceMap = Record<string, Record<string, number>>; // symbol -> { "YYYY-MM-DD": closePrice }
 
 export interface LifetimeDataPoint {
   date: string;        // "YYYY-MM-DD"
@@ -29,29 +30,16 @@ export interface LifetimePerformanceSummary {
 }
 
 /**
- * S&P 500 historical average annual return used for benchmark.
- * Widely used 10-year average (source: S&P 500 long-run average).
- */
-const SP500_ANNUAL_RETURN = 0.10;
-
-/**
  * Generate coordinated historical curves for Portfolio, S&P 500, and Invested Capital.
- *
- * Portfolio Value: TWRR-style log-linear approximation from cost basis →
- * currentTotalValue across the timeline. No simulated noise.
- *
- * S&P 500 Benchmark: Each BUY is treated as a simultaneous S&P 500 investment,
- * compounded at 10%/year (historical average). SELLs withdraw from benchmark
- * using FIFO cost reduction.
- *
- * Invested Capital: Running cumulative cost basis. SELL reduces it by the
- * avgCost of the shares sold (correct accounting), NOT the sell price.
+ * When priceHistoryMap is available, calculates real daily mark-to-market valuation
+ * using historical daily close prices. Falls back to smooth interpolation if offline/loading.
  */
 export function generateLifetimePortfolioData(
   transactions: Transaction[],
   currentTotalValue: number,
   currentCostBasis: number,
-  timeframe: LifetimeTimeFrame = "ALL"
+  timeframe: LifetimeTimeFrame = "ALL",
+  priceHistoryMap?: DailyPriceMap
 ): {
   data: LifetimeDataPoint[];
   summary: LifetimePerformanceSummary;
@@ -78,11 +66,6 @@ export function generateLifetimePortfolioData(
   const finalCostBasis = currentCostBasis > 0 ? currentCostBasis : 0;
   const finalPortfolioValue = currentTotalValue > 0 ? currentTotalValue : finalCostBasis;
 
-  // Overall growth ratio used for log-linear interpolation
-  // At dayProgress=0 → factor=1 (no gain), at dayProgress=1 → factor=overallGrowthRatio
-  const overallGrowthRatio =
-    finalCostBasis > 0 ? finalPortfolioValue / finalCostBasis : 1;
-
   // Pre-index transactions by date for O(1) daily lookup
   const txByDate: Record<string, Transaction[]> = {};
   for (const tx of sortedTxs) {
@@ -90,44 +73,71 @@ export function generateLifetimePortfolioData(
     txByDate[tx.date].push(tx);
   }
 
-  // Per-symbol holding map for correct SELL cost-basis reduction
+  // Running holdings map
   const holdingMap: Record<string, { shares: number; totalCostUSD: number }> = {};
+  const lastKnownPrice: Record<string, number> = {};
 
-  // S&P 500 benchmark contributions (amount + date of investment)
-  // FIFO order: earlier contributions are at lower indices
-  const sp500Contribs: Array<{ amountUSD: number; dateMs: number }> = [];
+  // Running S&P 500 benchmark units (Dollar-Weighted PME)
+  let sp500Units = 0;
+  let lastKnownSp500Price: number = 0;
+
+  // Find initial S&P 500 price baseline from historical data
+  const sp500History = priceHistoryMap?.["^GSPC"] || {};
+  const sp500Dates = Object.keys(sp500History).sort();
+  if (sp500Dates.length > 0) {
+    lastKnownSp500Price = sp500History[sp500Dates[0]] || 5000;
+  }
 
   const fullTimeline: LifetimeDataPoint[] = [];
   let cumulativeInvested = 0;
+
+  // Overall growth ratio used for fallback interpolation if no priceHistoryMap
+  const overallGrowthRatio =
+    finalCostBasis > 0 ? finalPortfolioValue / finalCostBasis : 1;
+
+  const hasRealPriceData =
+    priceHistoryMap &&
+    Object.keys(priceHistoryMap).length > 0 &&
+    Boolean(priceHistoryMap["^GSPC"] && Object.keys(priceHistoryMap["^GSPC"]).length > 0);
 
   for (let i = totalDays; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split("T")[0];
-    const dMs = d.getTime();
 
-    // ── Process transactions on this day ─────────────────────────────────────
+    // Update S&P 500 price for this day if available
+    if (sp500History[dateStr]) {
+      lastKnownSp500Price = sp500History[dateStr];
+    }
+
+    // ── 1. Process transactions on this day ─────────────────────────────────────
     for (const tx of txByDate[dateStr] ?? []) {
       const priceUSD = tx.priceUSD ?? tx.price ?? 0;
       const amount = tx.shares * priceUSD;
+      const sym = tx.symbol.toUpperCase();
 
       if (tx.type === "BUY") {
         cumulativeInvested += amount;
 
-        if (!holdingMap[tx.symbol]) {
-          holdingMap[tx.symbol] = { shares: 0, totalCostUSD: 0 };
+        if (!holdingMap[sym]) {
+          holdingMap[sym] = { shares: 0, totalCostUSD: 0 };
         }
-        holdingMap[tx.symbol].shares += tx.shares;
-        holdingMap[tx.symbol].totalCostUSD += amount;
+        holdingMap[sym].shares += tx.shares;
+        holdingMap[sym].totalCostUSD += amount;
+        if (priceUSD > 0) {
+          lastKnownPrice[sym] = priceUSD;
+        }
 
-        // Mirror this investment in the S&P 500 benchmark
-        sp500Contribs.push({ amountUSD: amount, dateMs: dMs });
+        // Mirror this investment into S&P 500 benchmark units
+        const spPriceAtBuy = sp500History[dateStr] || lastKnownSp500Price || 5000;
+        if (spPriceAtBuy > 0) {
+          sp500Units += amount / spPriceAtBuy;
+        }
       } else if (tx.type === "SELL") {
-        const holding = holdingMap[tx.symbol];
+        const holding = holdingMap[sym];
         if (holding && holding.shares > 0) {
           const sharesToSell = Math.min(tx.shares, holding.shares);
           const avgCostPerShare = holding.totalCostUSD / holding.shares;
-          // Fix #3: reduce cost basis by avgCost, not by sell price
           const costReduction = sharesToSell * avgCostPerShare;
 
           cumulativeInvested = Math.max(0, cumulativeInvested - costReduction);
@@ -135,33 +145,49 @@ export function generateLifetimePortfolioData(
           holding.totalCostUSD =
             holding.shares > 0 ? holding.shares * avgCostPerShare : 0;
 
-          // Withdraw the equivalent cost from S&P 500 benchmark (FIFO)
-          let remaining = costReduction;
-          for (const contrib of sp500Contribs) {
-            if (remaining <= 0) break;
-            const deduct = Math.min(contrib.amountUSD, remaining);
-            contrib.amountUSD -= deduct;
-            remaining -= deduct;
+          // Deduct equivalent value from S&P 500 units
+          const spPriceAtSell = sp500History[dateStr] || lastKnownSp500Price || 5000;
+          if (spPriceAtSell > 0) {
+            const unitsToDeduct = costReduction / spPriceAtSell;
+            sp500Units = Math.max(0, sp500Units - unitsToDeduct);
           }
         }
       }
     }
 
-    // ── Portfolio Value: log-linear interpolation ─────────────────────────────
-    // Fix #1 & #2: replace sin/cos drift + post-hoc scaling with a clean
-    // TWRR-style growth curve: value = basis × ratio^progress
-    const dayProgress = totalDays > 0 ? (totalDays - i) / totalDays : 1;
-    const growthFactor =
-      cumulativeInvested > 0 ? Math.pow(overallGrowthRatio, dayProgress) : 1;
-    const portfolioValue = cumulativeInvested * growthFactor;
-
-    // ── S&P 500 Value: compound each contribution to this day ─────────────────
+    // ── 2. Calculate Portfolio Value & Benchmark Value ──────────────────────────
+    let portfolioValue = 0;
     let sp500Value = 0;
-    for (const contrib of sp500Contribs) {
-      if (contrib.amountUSD <= 0) continue;
-      const daysHeld = Math.max(0, (dMs - contrib.dateMs) / (1000 * 60 * 60 * 24));
-      sp500Value +=
-        contrib.amountUSD * Math.pow(1 + SP500_ANNUAL_RETURN, daysHeld / 365);
+
+    if (hasRealPriceData) {
+      // Calculate true mark-to-market daily portfolio value
+      let dayVal = 0;
+      for (const [sym, holding] of Object.entries(holdingMap)) {
+        if (holding.shares <= 0) continue;
+
+        const symHistory = priceHistoryMap?.[sym];
+        if (symHistory && symHistory[dateStr]) {
+          lastKnownPrice[sym] = symHistory[dateStr];
+        }
+
+        const priceToUse =
+          lastKnownPrice[sym] ||
+          (holding.shares > 0 ? holding.totalCostUSD / holding.shares : 0);
+
+        dayVal += holding.shares * priceToUse;
+      }
+
+      portfolioValue = dayVal > 0 ? dayVal : cumulativeInvested;
+      sp500Value = sp500Units > 0 && lastKnownSp500Price > 0
+        ? sp500Units * lastKnownSp500Price
+        : cumulativeInvested;
+    } else {
+      // Fallback: smooth interpolation if real quotes are offline / still fetching
+      const dayProgress = totalDays > 0 ? (totalDays - i) / totalDays : 1;
+      const growthFactor =
+        cumulativeInvested > 0 ? Math.pow(overallGrowthRatio, dayProgress) : 1;
+      portfolioValue = cumulativeInvested * growthFactor;
+      sp500Value = cumulativeInvested * Math.pow(1 + 0.10, ((totalDays - i) / 365));
     }
 
     const monthShort = d.toLocaleDateString("en-US", { month: "short" });
@@ -174,14 +200,18 @@ export function generateLifetimePortfolioData(
     });
   }
 
-  // Guarantee exact endpoint values (removes floating-point drift)
+  // Anchor final endpoint to live quote stats for perfect synchronization
   if (fullTimeline.length > 0) {
     const last = fullTimeline[fullTimeline.length - 1];
-    last.portfolioValue = finalPortfolioValue;
-    if (finalCostBasis > 0) last.invested = finalCostBasis;
+    if (finalPortfolioValue > 0) {
+      last.portfolioValue = Math.round(finalPortfolioValue * 100) / 100;
+    }
+    if (finalCostBasis > 0) {
+      last.invested = Math.round(finalCostBasis * 100) / 100;
+    }
   }
 
-  // ── Filter by selected timeframe ──────────────────────────────────────────
+  // ── 3. Filter by selected timeframe ─────────────────────────────────────────
   let cutoffDate: Date;
   switch (timeframe) {
     case "7D":
@@ -221,7 +251,7 @@ export function generateLifetimePortfolioData(
   const filteredData = fullTimeline.filter((p) => p.date >= cutoffStr);
   const chartData = filteredData.length > 0 ? filteredData : fullTimeline;
 
-  // ── Performance Summary ───────────────────────────────────────────────────
+  // ── 4. Performance Summary ──────────────────────────────────────────────────
   const firstPt = chartData[0];
   const lastPt = chartData[chartData.length - 1];
 
@@ -231,7 +261,7 @@ export function generateLifetimePortfolioData(
   let sp500ChangePercent = 0;
 
   if (timeframe === "ALL") {
-    // Return measured relative to total invested capital (absolute gain)
+    // Return measured relative to total invested capital (absolute dollar & percentage gain)
     const investedBase = Math.max(1, lastPt.invested);
     portfolioChange = lastPt.portfolioValue - lastPt.invested;
     portfolioChangePercent = (portfolioChange / investedBase) * 100;
@@ -239,21 +269,24 @@ export function generateLifetimePortfolioData(
     sp500Change = lastPt.sp500Value - lastPt.invested;
     sp500ChangePercent = (sp500Change / investedBase) * 100;
   } else {
-    // Return measured from start of the selected window
-    portfolioChange = lastPt.portfolioValue - firstPt.portfolioValue;
-    portfolioChangePercent =
-      firstPt.portfolioValue > 0
-        ? (portfolioChange / firstPt.portfolioValue) * 100
-        : 0;
+    // Modified Dietz return: accurately accounts for capital deposits/withdrawals within the window
+    const capitalInflow = Math.max(0, lastPt.invested - firstPt.invested);
+    const netPortfolioGain = (lastPt.portfolioValue - firstPt.portfolioValue) - capitalInflow;
+    const netSp500Gain = (lastPt.sp500Value - firstPt.sp500Value) - capitalInflow;
 
-    sp500Change = lastPt.sp500Value - firstPt.sp500Value;
+    portfolioChange = netPortfolioGain;
+    sp500Change = netSp500Gain;
+
+    const avgPortfolioCapital = firstPt.portfolioValue + 0.5 * capitalInflow;
+    portfolioChangePercent =
+      avgPortfolioCapital > 0 ? (netPortfolioGain / avgPortfolioCapital) * 100 : 0;
+
+    const avgSpCapital = firstPt.sp500Value + 0.5 * capitalInflow;
     sp500ChangePercent =
-      firstPt.sp500Value > 0
-        ? (sp500Change / firstPt.sp500Value) * 100
-        : 0;
+      avgSpCapital > 0 ? (netSp500Gain / avgSpCapital) * 100 : 0;
   }
 
-  const outperformanceAmount = lastPt.portfolioValue - lastPt.sp500Value;
+  const outperformanceAmount = portfolioChange - sp500Change;
   const outperformancePercent = portfolioChangePercent - sp500ChangePercent;
   const isAhead = outperformanceAmount >= 0;
 
@@ -287,3 +320,4 @@ export function generateLifetimePortfolioData(
 
   return { data: chartData, summary };
 }
+

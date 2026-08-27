@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import YahooFinance from 'yahoo-finance2';
+import { sanitizeSymbols } from '@/lib/security';
 
 const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
@@ -11,7 +12,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing or invalid symbols parameter" }, { status: 400 });
     }
 
-    const uniqueSymbols = Array.from(new Set(symbols));
+    const uniqueSymbols = sanitizeSymbols(symbols, 50);
+    if (uniqueSymbols.length === 0) {
+      return NextResponse.json({ profiles: {} });
+    }
     
     // Fetch asset profiles and financial details in parallel
     const profiles = await Promise.allSettled(
