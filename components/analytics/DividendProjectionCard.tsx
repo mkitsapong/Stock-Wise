@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import CompanyLogo from '@/components/common/CompanyLogo';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface DividendProjectionCardProps {
   holdings: any[];
@@ -12,7 +13,11 @@ interface DividendProjectionCardProps {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function DividendProjectionCard({ holdings, profiles, currencySymbol = '$' }: DividendProjectionCardProps) {
+export default function DividendProjectionCard({ holdings, profiles, currencySymbol }: DividendProjectionCardProps) {
+  const { currency, exchangeRate, currencySymbol: contextSymbol } = useCurrency();
+  const activeCurrencySymbol = currencySymbol || contextSymbol;
+  const fxRate = currency === 'THB' ? exchangeRate : 1;
+
   const dividendStats = useMemo(() => {
     if (!holdings || holdings.length === 0) {
       return {
@@ -28,12 +33,12 @@ export default function DividendProjectionCard({ holdings, profiles, currencySym
     const dividendPayers: any[] = [];
 
     holdings.forEach(h => {
-      const price = h.currentPrice || h.avgCost || 0;
+      const price = (h.currentPrice || h.avgCost || 0) * fxRate;
       const val = h.shares * price;
       totalPortfolioVal += val;
 
       const profile = profiles[h.symbol] || {};
-      const rate = profile.dividendRate || 0;
+      const rate = (profile.dividendRate || 0) * fxRate;
       const yieldPct = profile.dividendYield || 0;
 
       if (rate > 0 || yieldPct > 0) {
@@ -91,7 +96,7 @@ export default function DividendProjectionCard({ holdings, profiles, currencySym
         </div>
         <div className="text-right">
           <p className="text-base font-bold font-mono text-profit">
-            +{currencySymbol}{dividendStats.totalAnnualIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            +{activeCurrencySymbol}{dividendStats.totalAnnualIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             <span className="text-xs text-muted font-normal"> / ปี</span>
           </p>
           <p className="text-[11px] font-mono text-muted">
@@ -135,7 +140,7 @@ export default function DividendProjectionCard({ holdings, profiles, currencySym
                       fontSize: '11px',
                       padding: '8px 12px',
                     }}
-                    formatter={(val: any) => [`${currencySymbol}${Number(val).toFixed(2)}`, 'Estimated Payout']}
+                    formatter={(val: any) => [`${activeCurrencySymbol}${Number(val).toFixed(2)}`, 'Estimated Payout']}
                   />
                   <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
                     {dividendStats.monthlyData.map((entry, index) => (
@@ -160,7 +165,7 @@ export default function DividendProjectionCard({ holdings, profiles, currencySym
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold font-mono text-foreground">{p.symbol}</p>
                     <p className="text-[10px] text-profit font-mono font-bold">
-                      +{currencySymbol}{p.annualIncome.toFixed(2)} <span className="text-muted font-normal">({p.yieldPct.toFixed(1)}%)</span>
+                      +{activeCurrencySymbol}{p.annualIncome.toFixed(2)} <span className="text-muted font-normal">({p.yieldPct.toFixed(1)}%)</span>
                     </p>
                   </div>
                 </div>

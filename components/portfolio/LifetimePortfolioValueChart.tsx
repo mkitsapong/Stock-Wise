@@ -131,18 +131,26 @@ export default function LifetimePortfolioValueChart({
       {/* 2. Outperformance Banner */}
       <div className="p-3.5 sm:p-4 rounded-2xl bg-muted-bg/50 border border-border/70 backdrop-blur-md flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2.5">
-          <span className="text-base sm:text-lg">🎉</span>
+          <span className="text-base sm:text-lg">{transactions.length > 0 ? "🎉" : "📊"}</span>
           <p className="text-xs sm:text-sm font-medium text-foreground/95">
-            Portfolio is {summary.isAhead ? "ahead of" : "trailing"}{" "}
-            <span className="font-bold text-foreground">S&P 500</span> by{" "}
-            <span className={cn(
-              "font-mono font-bold",
-              summary.isAhead ? "text-profit" : "text-loss"
-            )}>
-              {formatSignedCurrency(summary.outperformanceAmount)} (
-              {summary.outperformancePercent >= 0 ? "+" : ""}
-              {summary.outperformancePercent.toFixed(2)}%)
-            </span>
+            {transactions.length > 0 ? (
+              <>
+                Portfolio is {summary.isAhead ? "ahead of" : "trailing"}{" "}
+                <span className="font-bold text-foreground">S&P 500</span> by{" "}
+                <span className={cn(
+                  "font-mono font-bold",
+                  summary.isAhead ? "text-profit" : "text-loss"
+                )}>
+                  {formatSignedCurrency(summary.outperformanceAmount)} (
+                  {summary.outperformancePercent >= 0 ? "+" : ""}
+                  {summary.outperformancePercent.toFixed(2)}%)
+                </span>
+              </>
+            ) : (
+              <span>
+                Track your portfolio against the <span className="font-bold text-foreground">S&P 500 benchmark</span> by logging transactions.
+              </span>
+            )}
           </p>
         </div>
       </div>
@@ -265,12 +273,12 @@ export default function LifetimePortfolioValueChart({
                   year: "numeric",
                 });
 
-                // Fix #4: use display values (currency-aware) instead of raw USD
-                const displayPort = orig.displayPortfolio ?? orig.portfolioValue;
-                const displaySp = orig.displaySp500 ?? orig.sp500Value;
-                const displayInv = orig.displayInvested ?? orig.invested;
-                const diff = displayPort - displaySp;
-                const isPos = diff >= 0;
+                // Fix: pass USD values directly to formatCurrency, which handles active currency conversion (USD/THB)
+                const portUSD = orig.portfolioValue;
+                const spUSD = orig.sp500Value;
+                const invUSD = orig.invested;
+                const diffUSD = portUSD - spUSD;
+                const isPos = diffUSD >= 0;
 
                 return (
                   <div className="glass-card !rounded-2xl p-4 shadow-2xl border border-border/80 min-w-[240px] text-xs font-mono space-y-2">
@@ -285,7 +293,7 @@ export default function LifetimePortfolioValueChart({
                           Portfolio
                         </span>
                         <span className="font-bold text-foreground text-sm tabular-nums">
-                          {formatCurrency(displayPort)}
+                          {formatCurrency(portUSD)}
                         </span>
                       </div>
 
@@ -295,7 +303,7 @@ export default function LifetimePortfolioValueChart({
                           S&P 500
                         </span>
                         <span className="font-bold text-[#fb923c] tabular-nums">
-                          {formatCurrency(displaySp)}
+                          {formatCurrency(spUSD)}
                         </span>
                       </div>
 
@@ -305,7 +313,7 @@ export default function LifetimePortfolioValueChart({
                           Invested
                         </span>
                         <span className="font-bold text-[#a855f7] tabular-nums">
-                          {formatCurrency(displayInv)}
+                          {formatCurrency(invUSD)}
                         </span>
                       </div>
                     </div>
@@ -313,7 +321,7 @@ export default function LifetimePortfolioValueChart({
                     <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px]">
                       <span className="text-muted font-sans">Vs. S&P 500:</span>
                       <span className={cn("font-bold", isPos ? "text-profit" : "text-loss")}>
-                        {isPos ? "+" : ""}{formatCurrency(diff)} ({isPos ? "+" : ""}{(displaySp > 0 ? (diff / displaySp) * 100 : 0).toFixed(1)}%)
+                        {isPos ? "+" : ""}{formatCurrency(diffUSD)} ({isPos ? "+" : ""}{(spUSD > 0 ? (diffUSD / spUSD) * 100 : 0).toFixed(1)}%)
                       </span>
                     </div>
                   </div>

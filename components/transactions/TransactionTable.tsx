@@ -10,7 +10,7 @@ import AddTransactionModal from "./AddTransactionModal";
 
 export default function TransactionTable() {
   const { transactions, deleteTransaction, portfolios, activePortfolioId } = useTransactions();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, exchangeRate } = useCurrency();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Group transactions by date
@@ -64,16 +64,18 @@ export default function TransactionTable() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40">
+            <tbody className="divide-y border-border/40">
               {dateGroups.map(([date, txs]) =>
                 txs.map((tx, idx) => {
                   const portInfo = getPortfolioInfo(tx.portfolioId);
+                  const priceUSD = tx.priceUSD ?? (tx.currency === "THB" ? tx.price / exchangeRate : tx.price);
+                  const totalUSD = tx.shares * priceUSD;
 
                   return (
                     <tr key={tx.id} className="table-row-hover group">
                       <td className="px-5 py-4 text-sm text-muted font-medium">
                         {idx === 0
-                          ? new Date(date).toLocaleDateString("en-US", {
+                          ? new Date(date + (date.includes("T") ? "" : "T00:00:00")).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
@@ -131,10 +133,10 @@ export default function TransactionTable() {
                         {formatNumber(tx.shares)}
                       </td>
                       <td className="px-5 py-4 text-right font-mono text-sm text-muted tabular-nums">
-                        {formatCurrency(tx.price)}
+                        {formatCurrency(priceUSD)}
                       </td>
                       <td className="px-5 py-4 text-right font-mono text-sm font-semibold text-foreground tabular-nums">
-                        {formatCurrency(tx.total)}
+                        {formatCurrency(totalUSD)}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">

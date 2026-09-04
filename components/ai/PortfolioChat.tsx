@@ -27,15 +27,23 @@ export default function PortfolioChat() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { holdings, portfolioStats } = usePortfolioQuotes();
-  const { currency, exchangeRate } = useCurrency();
+  const { currency, exchangeRate, formatCurrency } = useCurrency();
+
+  const createWelcomeMessage = (): Message => {
+    const text = holdings.length > 0
+      ? `สวัสดีครับ! 👋 ผมคือ **StockWise AI** ผู้ช่วยวิเคราะห์พอร์ตส่วนตัวของคุณ\n\nตอนนี้ผมเห็นพอร์ตของคุณมี **${holdings.length} หุ้น** มูลค่ารวม **${formatCurrency(portfolioStats.totalValue)}** ถามข้อมูลหรือขอคำแนะนำได้เลยนะครับ!`
+      : `สวัสดีครับ! 👋 ผมคือ **StockWise AI** ผู้ช่วยวิเคราะห์พอร์ตส่วนตัวของคุณ\n\nตอนนี้พอร์ตของคุณยังไม่มีรายการหุ้น สามารถเพิ่มรายการซื้อขายที่หน้า Transactions หรือถามคำแนะนำและกลยุทธ์การลงทุนทั่วไปก่อนได้เลยครับ!`;
+
+    return {
+      role: "assistant",
+      content: text,
+      timestamp: new Date(),
+    };
+  };
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      setMessages([{
-        role: "assistant",
-        content: `สวัสดีครับ! 👋 ผมคือ **StockWise AI** ผู้ช่วยวิเคราะห์พอร์ตส่วนตัวของคุณ\n\nตอนนี้ผมเห็นพอร์ตของคุณมี **${holdings.length} หุ้น** มูลค่ารวม **$${portfolioStats.totalValue.toFixed(2)}** ถามได้เลยนะครับ!`,
-        timestamp: new Date(),
-      }]);
+      setMessages([createWelcomeMessage()]);
     }
   }, [isOpen, holdings.length, portfolioStats.totalValue]);
 
@@ -46,6 +54,10 @@ export default function PortfolioChat() {
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
+
+  const resetChat = () => {
+    setMessages([createWelcomeMessage()]);
+  };
 
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
@@ -94,15 +106,50 @@ export default function PortfolioChat() {
     }
   };
 
-  /** Render markdown-like bold (**text**) and line breaks */
-  const renderContent = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) =>
+  /** Render markdown-like formatting (bold, bullet points, headers) */
+  const renderLine = (line: string, index: number) => {
+    const trimmed = line.trim();
+    if (!trimmed) return <div key={index} className="h-1.5" />;
+
+    const isHeader = trimmed.startsWith("### ");
+    const isBullet = trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ");
+
+    const textToRender = isHeader
+      ? trimmed.slice(4)
+      : isBullet
+      ? trimmed.slice(2)
+      : trimmed;
+
+    const parts = textToRender.split(/(\*\*[^*]+\*\*)/g);
+    const content = parts.map((part, i) =>
       part.startsWith("**") && part.endsWith("**") ? (
-        <strong key={i}>{part.slice(2, -2)}</strong>
+        <strong key={i} className="font-semibold text-foreground">{part.slice(2, -2)}</strong>
       ) : (
         <span key={i}>{part}</span>
       )
+    );
+
+    if (isHeader) {
+      return (
+        <p key={index} className="text-xs font-bold font-sans uppercase tracking-wider text-accent pt-1.5 pb-0.5">
+          {content}
+        </p>
+      );
+    }
+
+    if (isBullet) {
+      return (
+        <div key={index} className="flex items-start gap-2 pl-1 py-0.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent/80 shrink-0 mt-1.5" />
+          <p className="flex-1 leading-relaxed">{content}</p>
+        </div>
+      );
+    }
+
+    return (
+      <p key={index} className={index > 0 ? "mt-1 leading-relaxed" : "leading-relaxed"}>
+        {content}
+      </p>
     );
   };
 
@@ -113,7 +160,7 @@ export default function PortfolioChat() {
         id="portfolio-chat-btn"
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 md:z-50 w-13 h-13 sm:w-14 sm:h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 group cursor-pointer",
+          "fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 md:z-50 w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 group cursor-pointer",
           "bg-gradient-to-br from-accent to-purple-500 hover:scale-110 active:scale-95",
           isOpen && "opacity-0 pointer-events-none scale-75"
         )}
@@ -150,14 +197,29 @@ export default function PortfolioChat() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={resetChat}
+                className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all cursor-pointer"
+                title="ล้างการสนทนา (Reset Chat)"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                  <path d="M8 16H3v5" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-xl text-muted hover:text-foreground hover:bg-muted-bg transition-all cursor-pointer"
+                title="ปิด (Close)"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -172,14 +234,12 @@ export default function PortfolioChat() {
                   </div>
                 )}
                 <div className={cn(
-                  "max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
+                  "max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
                   msg.role === "user"
                     ? "bg-accent text-white rounded-tr-sm"
                     : "bg-muted-bg/60 text-foreground rounded-tl-sm border border-border/40"
                 )}>
-                  {msg.content.split("\n").map((line, j) => (
-                    <p key={j} className={j > 0 ? "mt-1" : ""}>{renderContent(line)}</p>
-                  ))}
+                  {msg.content.split("\n").map((line, j) => renderLine(line, j))}
                 </div>
               </div>
             ))}
@@ -208,7 +268,7 @@ export default function PortfolioChat() {
                   <button
                     key={q}
                     onClick={() => sendMessage(q)}
-                    className="text-left text-xs text-muted hover:text-accent px-3 py-1.5 rounded-lg hover:bg-accent/10 transition-all border border-transparent hover:border-accent/20"
+                    className="text-left text-xs text-muted hover:text-accent px-3 py-1.5 rounded-lg hover:bg-accent/10 transition-all border border-transparent hover:border-accent/20 cursor-pointer"
                   >
                     {q}
                   </button>
@@ -235,7 +295,7 @@ export default function PortfolioChat() {
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="w-10 h-10 rounded-xl bg-accent hover:bg-accent/90 disabled:opacity-40 flex items-center justify-center transition-all active:scale-95 flex-shrink-0 shadow-md"
+                className="w-10 h-10 rounded-xl bg-accent hover:bg-accent/90 disabled:opacity-40 flex items-center justify-center transition-all active:scale-95 flex-shrink-0 shadow-md cursor-pointer"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />

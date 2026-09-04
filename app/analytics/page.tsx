@@ -13,22 +13,34 @@ import { cn } from '@/lib/utils';
 
 export default function AnalyticsPage() {
   const { holdings, isLoading: isQuotesLoading } = usePortfolioQuotes();
-  const { currency } = useCurrency();
+  const { currency, exchangeRate } = useCurrency();
   const [profileData, setProfileData] = useState<Record<string, any>>({});
   const [loadingData, setLoadingData] = useState(true);
 
-  // Derive top holdings data
+  const rate = currency === 'THB' ? exchangeRate : 1;
+
+  // Normalized holdings scaled to active display currency (for P&L and Market Cap breakdowns)
+  const currencyHoldings = useMemo(() => {
+    if (!holdings) return [];
+    return holdings.map((h: RealTimeHolding) => ({
+      ...h,
+      currentPrice: (h.currentPrice || h.avgCost || 0) * rate,
+      avgCost: (h.avgCost || 0) * rate,
+    }));
+  }, [holdings, rate]);
+
+  // Derive top holdings data in active currency
   const topHoldingsData = useMemo(() => {
     if (!holdings) return [];
     return holdings.map((h: RealTimeHolding) => {
-      const currentPrice = h.currentPrice || h.avgCost || 0;
+      const currentPrice = (h.currentPrice || h.avgCost || 0) * rate;
       const value = h.shares * currentPrice;
       return {
         symbol: h.symbol,
         value: value,
       };
     }).filter(h => h.value > 0);
-  }, [holdings]);
+  }, [holdings, rate]);
 
   // Fetch Financial & Sector Data
   useEffect(() => {
@@ -60,14 +72,14 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, [holdings]);
 
-  // Derive Sector Allocation Data
+  // Derive Sector Allocation Data in active currency
   const sectorAllocationData = useMemo(() => {
     if (!holdings || Object.keys(profileData).length === 0) return [];
     
     const aggregated: Record<string, number> = {};
     
     holdings.forEach((h: RealTimeHolding) => {
-      const currentPrice = h.currentPrice || h.avgCost || 0;
+      const currentPrice = (h.currentPrice || h.avgCost || 0) * rate;
       const value = h.shares * currentPrice;
       if (value <= 0) return;
       
@@ -79,7 +91,7 @@ export default function AnalyticsPage() {
       name,
       value
     }));
-  }, [holdings, profileData]);
+  }, [holdings, profileData, rate]);
 
   // Calculate winning vs losing positions
   const { gainersCount, losersCount, winPercent } = useMemo(() => {
@@ -234,7 +246,7 @@ export default function AnalyticsPage() {
             {/* Row 1: Health Score & Win Rate Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0 stagger-1">
               <PortfolioHealthScore holdings={holdings} sectorData={profileData} />
-              <ProfitLossBreakdown holdings={holdings} currencySymbol={currencySymbol} />
+              <ProfitLossBreakdown holdings={currencyHoldings} currencySymbol={currencySymbol} />
             </div>
 
             {/* Row 2: Sector Allocation & Top Holdings */}
@@ -272,7 +284,7 @@ export default function AnalyticsPage() {
             {/* Row 3: Market Cap Allocation & Dividend Projection */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up opacity-0 stagger-3">
               <MarketCapDonutChart 
-                holdings={holdings} 
+                holdings={currencyHoldings} 
                 profiles={profileData} 
                 currencySymbol={currencySymbol} 
               />
