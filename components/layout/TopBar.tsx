@@ -162,9 +162,9 @@ export default function TopBar() {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0];
 
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border/80 bg-background/85 px-4 sm:px-6 lg:px-8 backdrop-blur-xl transition-all">
-      <div className="flex flex-1 items-center justify-between gap-4">
-        {/* Left Spacer / Branding */}
+    <div className="sticky top-0 z-30 flex h-16 items-center border-b border-border/80 bg-background/85 px-3 sm:px-6 lg:px-8 backdrop-blur-xl transition-all">
+      <div className="flex flex-1 items-center justify-between gap-2 sm:gap-4">
+        {/* Left Spacer / Branding (Desktop) */}
         <div className="hidden md:flex flex-1 items-center gap-2">
           <span className="text-xs font-semibold text-muted/80 tracking-wide uppercase">
             StockWise Pro
@@ -178,10 +178,10 @@ export default function TopBar() {
         </div>
 
         {/* Search Section */}
-        <div className="relative w-full max-w-xl flex-[2] md:flex-none min-w-0" ref={containerRef}>
+        <div className="relative flex-1 max-w-xl md:flex-none min-w-0" ref={containerRef}>
           <div className="relative flex items-center group">
             <svg
-              className="absolute left-3.5 h-4 w-4 text-muted group-hover:text-foreground transition-colors pointer-events-none"
+              className="absolute left-3 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted group-hover:text-foreground transition-colors pointer-events-none"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -197,10 +197,10 @@ export default function TopBar() {
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              placeholder="Search stocks (AAPL, NVDA, PTT)..."
-              className="w-full rounded-xl border border-border/80 bg-card-bg/60 py-2 pl-10 pr-14 sm:pr-16 text-xs sm:text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-border placeholder:text-muted/60 truncate"
+              placeholder="Search stocks..."
+              className="w-full rounded-xl border border-border/80 bg-card-bg/60 py-1.5 sm:py-2 pl-8 sm:pl-10 pr-10 sm:pr-16 text-xs sm:text-sm text-foreground shadow-sm transition-all focus:border-accent focus:bg-card-bg focus:outline-none focus:ring-2 focus:ring-accent/20 hover:border-border placeholder:text-muted/60 truncate"
             />
-            <div className="absolute right-2.5 flex items-center gap-1.5">
+            <div className="absolute right-2 sm:right-2.5 flex items-center gap-1 sm:gap-1.5">
               {query && (
                 <button
                   onClick={() => {
@@ -218,9 +218,9 @@ export default function TopBar() {
             </div>
           </div>
 
-          {/* Search Dropdown */}
+          {/* Search Dropdown - Spans full width comfortably on mobile */}
           {isOpen && (debouncedQuery.trim() || isLoading) && (
-            <div className="absolute left-0 right-0 top-full mt-2 w-full max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+            <div className="fixed left-3 right-3 sm:absolute sm:left-0 sm:right-0 top-16 sm:top-full mt-1.5 sm:mt-2 max-w-[calc(100vw-1.5rem)] sm:max-w-xl rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
               {isLoading ? (
                 <div className="flex items-center justify-center p-6 text-sm text-muted">
                   <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mr-2" />
@@ -285,16 +285,16 @@ export default function TopBar() {
         </div>
 
         {/* Portfolio Switcher, Currency Switcher & User Auth Section */}
-        <div className="flex items-center gap-2 sm:gap-2.5 ml-2 sm:ml-4">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-1 sm:ml-4">
           <PortfolioSwitcher variant="dropdown" />
           <CurrencySwitcher />
 
           {/* User Auth Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
+          <div className="relative shrink-0" ref={profileRef}>
             {user ? (
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-card-bg/80 border border-border/80 hover:border-accent/40 hover:bg-muted-bg/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer group shadow-xs"
+                className="relative flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-card-bg/80 border border-border/80 hover:border-accent/40 hover:bg-muted-bg/60 transition-all focus:outline-none focus:ring-2 focus:ring-accent/20 cursor-pointer group shadow-xs shrink-0"
                 aria-label="User Profile"
               >
                 <div className="relative h-7 w-7 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-xs shadow-xs">
@@ -326,18 +326,19 @@ export default function TopBar() {
             ) : (
               <button
                 onClick={() => openAuthModal("signin")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs border border-accent/20 transition-all active:scale-95 shadow-sm"
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent font-semibold text-xs border border-accent/20 transition-all active:scale-95 shadow-sm shrink-0"
+                title="Sign In"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                <span>Sign In</span>
+                <span className="hidden sm:inline">Sign In</span>
               </button>
             )}
 
             {/* Profile Dropdown Menu */}
             {isProfileOpen && user && (
-              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-2 shadow-2xl animate-fade-in-up z-50">
+              <div className="fixed right-3 sm:absolute sm:right-0 top-16 sm:top-full mt-1.5 sm:mt-2 w-64 max-w-[calc(100vw-1.5rem)] origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-2 shadow-2xl animate-fade-in-up z-50">
                 <div className="px-3 py-3 border-b border-border/40 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-tr from-accent to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
                     {userAvatarUrl ? (

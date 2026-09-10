@@ -68,18 +68,18 @@ export default function MarketTickerRibbon() {
   }, []);
 
   return (
-    <div className="w-full bg-muted-bg/30 border-b border-border/50 backdrop-blur-md overflow-hidden text-xs py-1.5 px-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 shrink-0 pr-3 border-r border-border/60">
-          <span className="flex h-2 w-2 relative">
+    <div className="w-full bg-muted-bg/30 border-b border-border/50 backdrop-blur-md overflow-hidden text-xs py-1.5 px-3 sm:px-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 overflow-hidden">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pr-2.5 sm:pr-3 border-r border-border/60">
+          <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted font-mono">Markets</span>
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-muted font-mono">Markets</span>
         </div>
 
         {/* Scrolling or Flex Tickers */}
-        <div className="flex items-center gap-6 overflow-x-auto scrollbar-none py-0.5 w-full">
+        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-none py-0.5 w-full touch-pan-x overscroll-x-contain">
           {tickers.map((item) => {
             const isPos = item.change >= 0;
             return (

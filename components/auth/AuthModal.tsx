@@ -180,7 +180,7 @@ export default function AuthModal() {
 
       {/* Main Glassmorphism Card */}
       <div
-        className={`relative w-full max-w-[440px] overflow-hidden rounded-[28px] border border-white/10 dark:border-white/10 bg-card-bg/95 dark:bg-[#0c121e]/90 p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-modal-pop z-10 ${
+        className={`relative w-full max-w-[440px] my-auto max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[28px] border border-white/10 dark:border-white/10 bg-card-bg/95 dark:bg-[#0c121e]/90 p-5 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-modal-pop z-10 custom-scrollbar ${
           hasErrorShake ? "animate-shake" : ""
         }`}
       >

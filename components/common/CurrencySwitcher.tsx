@@ -61,12 +61,12 @@ export default function CurrencySwitcher({
   return (
     <div className={cn("relative flex items-center gap-2", className)}>
       {/* Segmented Currency Toggle */}
-      <div className="flex items-center bg-muted-bg/80 p-1 rounded-xl border border-border/80 shadow-sm backdrop-blur-md">
+      <div className="flex items-center bg-muted-bg/80 p-0.5 sm:p-1 rounded-xl border border-border/80 shadow-sm backdrop-blur-md shrink-0">
         <button
           type="button"
           onClick={() => setCurrency("USD")}
           className={cn(
-            "flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+            "flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
             currency === "USD"
               ? "bg-card-bg text-accent shadow-md border border-border/60 scale-[1.02]"
               : "text-muted hover:text-foreground"
@@ -74,13 +74,13 @@ export default function CurrencySwitcher({
           title="Display prices in US Dollars ($)"
         >
           <span>$</span>
-          {!compact && <span>USD</span>}
+          {!compact && <span className="hidden sm:inline">USD</span>}
         </button>
         <button
           type="button"
           onClick={() => setCurrency("THB")}
           className={cn(
-            "flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+            "flex items-center gap-1 px-2 sm:px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
             currency === "THB"
               ? "bg-card-bg text-accent shadow-md border border-border/60 scale-[1.02]"
               : "text-muted hover:text-foreground"
@@ -88,7 +88,7 @@ export default function CurrencySwitcher({
           title="Display prices in Thai Baht (฿)"
         >
           <span>฿</span>
-          {!compact && <span>THB</span>}
+          {!compact && <span className="hidden sm:inline">THB</span>}
         </button>
       </div>
 

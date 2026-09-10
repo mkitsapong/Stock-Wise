@@ -53,14 +53,21 @@ export default function PortfolioSwitcher({ className, variant = "tabs" }: Props
           <button
             type="button"
             onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/80 bg-card-bg/80 hover:bg-card-bg hover:border-accent/40 text-xs font-semibold transition-all shadow-xs cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl border border-border/80 bg-card-bg/80 hover:bg-card-bg hover:border-accent/40 text-xs font-semibold transition-all shadow-xs cursor-pointer group shrink-0"
           >
             <div
               style={{ backgroundColor: activePortfolio ? activePortfolio.color : "#6366f1" }}
-              className="w-2 h-2 rounded-full shadow-xs"
+              className="w-2 h-2 rounded-full shadow-xs shrink-0"
             />
-            <span className="font-mono text-foreground font-bold truncate max-w-[120px]">
-              {activePortfolioId === "ALL" ? "All Portfolios" : activePortfolio?.name || "Portfolio"}
+            <span className="font-mono text-foreground font-bold truncate max-w-[55px] sm:max-w-[120px]">
+              {activePortfolioId === "ALL" ? (
+                <>
+                  <span className="sm:hidden">All</span>
+                  <span className="hidden sm:inline">All Portfolios</span>
+                </>
+              ) : (
+                activePortfolio?.name || "Portfolio"
+              )}
             </span>
             <svg
               width="12"
@@ -71,14 +78,14 @@ export default function PortfolioSwitcher({ className, variant = "tabs" }: Props
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={cn("text-muted transition-transform", isDropdownOpen && "rotate-180")}
+              className={cn("text-muted transition-transform shrink-0", isDropdownOpen && "rotate-180")}
             >
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
 
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-60 origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-fade-in-up">
+            <div className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-2rem)] origin-top-right rounded-2xl border border-border/80 bg-card-bg/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-fade-in-up">
               <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
                 Switch Strategy Portfolio
               </div>
