@@ -142,13 +142,14 @@ Stock-Wise/
 │   │   ├── analytics/          # API สำหรับดึงข้อมูลสรุปผลพอร์ต
 │   │   ├── chart/              # API ฟีดราคากราฟแท่งเทียนย้อนหลัง
 │   │   ├── earnings/           # API ปฏิทินผลประกอบการ
+│   │   ├── insights/           # ดึงข้อมูลหัวข้อข่าวและ Insights รายตัวหุ้น (Yahoo Finance)
 │   │   ├── news-content/       # Scraper อ่านเนื้อหาข่าวเต็ม
 │   │   ├── news-summary/       # Gemini AI สรุปและวิเคราะห์ Sentiment ข่าว
 │   │   ├── portfolio-chat/     # Gemini AI ถาม-ตอบและวิเคราะห์พอร์ตส่วนตัว
 │   │   ├── quotes/             # ดึงราคาหุ้นและดัชนีแบบเรียลไทม์ (Yahoo Finance)
 │   │   ├── search/             # ค้นหารายชื่อหุ้นทั่วโลก
 │   │   └── translate/          # แปลภาษาเนื้อหาข่าวเป็นภาษาไทย
-│   ├── auth/                   # หน้าเข้าสู่ระบบและสมัครสมาชิก
+│   ├── auth/                   # หน้าเข้าสู่ระบบและสมัครสมาชิก พร้อม OAuth Callback (/auth/callback)
 │   ├── news/                   # หน้ารวมข่าวสารและการวิเคราะห์ตลาดด้วย AI
 │   ├── portfolio/              # หน้าภาพรวมพอร์ต, ตรวจสุขภาพพอร์ต, ปันผล, และสัดส่วนสินทรัพย์
 │   ├── share/                  # หน้าสร้างและส่งออกการ์ดสรุปพอร์ตสำหรับ Social Media
@@ -177,9 +178,13 @@ Stock-Wise/
 │   ├── diversification.ts      # คำนวณค่าดัชนีความเสี่ยง HHI และสัดส่วน Sector
 │   ├── dividends.ts            # คำนวณเงินปันผลและรอบจ่าย
 │   ├── export-csv.ts           # ฟังก์ชันแปลงข้อมูลธุรกรรมเป็นไฟล์ CSV
+│   ├── holdings-performance.ts # คำนวณ P/L และประสิทธิภาพรายตัว
 │   ├── indicators.ts           # คำนวณสูตรเทคนิคอล (RSI, MACD, SMA, EMA, BB)
+│   ├── lifetime-portfolio.ts   # คำนวณมูลค่าพอร์ตย้อนหลังตลอดชีพเทียบเงินต้น
 │   ├── portfolio-doctor.ts     # คำนวณเกรดสุขภาพพอร์ตและจำลองวิกฤติตลาด
+│   ├── security.ts             # Input Sanitization ป้องกัน Injection
 │   ├── shareCardCanvas.ts      # เรนเดอร์ภาพการ์ดสรุปพอร์ตผ่าน HTML5 Canvas
+│   ├── supabase-server.ts      # Supabase SSR Client สำหรับ Route Handlers
 │   ├── supabase.ts             # Supabase Client configuration
 │   └── utils.ts                # ฟังก์ชันจัดรูปแบบตัวเลข ค่าเงิน และเปอร์เซ็นต์
 ├── public/                     # Static assets, Web App Manifest & App Icons

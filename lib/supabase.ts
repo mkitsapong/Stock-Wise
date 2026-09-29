@@ -7,7 +7,9 @@ export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
   supabaseAnonKey && 
   supabaseUrl.startsWith('https://') &&
-  !supabaseUrl.includes('your-project-url')
+  !supabaseUrl.includes('your-project-url') &&
+  !supabaseUrl.includes('your-project-id') &&
+  !supabaseAnonKey.includes('your-supabase-anon-key')
 );
 
 // Create a single supabase client for interacting with your database

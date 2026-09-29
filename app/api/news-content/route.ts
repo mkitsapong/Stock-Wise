@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    let paragraphs: string[] = [];
+    const paragraphs: string[] = [];
 
     // Yahoo Finance & typical financial article layout
     const contentAreas = $('.caas-body p, article p, .article-body p, .story-body p');

@@ -623,7 +623,7 @@ export default function AuthModal() {
             <div className="mt-3 text-center text-xs text-muted">
               {authModalMode === "signin" ? (
                 <>
-                  Don't have an account yet?{" "}
+                  Don&apos;t have an account yet?{" "}
                   <button
                     type="button"
                     onClick={() => {

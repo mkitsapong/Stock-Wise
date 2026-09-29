@@ -422,7 +422,7 @@ export default function DividendSection() {
                 Other Holdings ({nonDividendHoldings.length})
               </h4>
               <p className="text-[11px] text-muted">
-                หุ้นที่ยังไม่ได้เปิดระบบเงินปันผล สามารถคลิก "Add Dividend" เพื่อระบุอัตราเงินปันผลได้
+                หุ้นที่ยังไม่ได้เปิดระบบเงินปันผล สามารถคลิก &quot;Add Dividend&quot; เพื่อระบุอัตราเงินปันผลได้
               </p>
             </div>
           </div>

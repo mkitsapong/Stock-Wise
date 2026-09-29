@@ -71,7 +71,7 @@ export function usePortfolioQuotes() {
           const updatedHoldings = initialRealTimeHoldings.map(holding => {
             const quoteData = quotes.find((q: any) => q.symbol === holding.symbol);
             
-            let updatedHolding = { ...holding };
+            const updatedHolding = { ...holding };
             
             if (quoteData && quoteData.response && quoteData.response[0]) {
               const resp = quoteData.response[0];

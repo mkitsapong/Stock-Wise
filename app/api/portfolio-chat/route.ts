@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     const systemPrompt = `คุณคือ StockWise AI — ผู้ช่วยด้านการลงทุนส่วนตัวที่เชี่ยวชาญและเป็นมิตร สามารถอ่านและวิเคราะห์พอร์ตการลงทุนจริงๆ ของ user ได้
 
 **ข้อมูลพอร์ตปัจจุบัน (Real-time):**
+สกุลเงินหลักที่ผู้ใช้เลือกดู: ${currency || 'USD'} (${currencySymbol})
 มูลค่าพอร์ตรวม: $${totalValue.toFixed(2)} (฿${(totalValue * rate).toFixed(0)})
 ต้นทุนรวม: $${totalCost.toFixed(2)}
 กำไร/ขาดทุน unrealized: ${unrealizedPL >= 0 ? '+' : ''}$${unrealizedPL.toFixed(2)} (${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%)

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useWatchlist } from "@/context/WatchlistContext";
 
 const ALERT_THRESHOLD_PERCENT = 2; // fire when price is within ±2% of target
 const ALERT_COOLDOWN_HOURS = 4;     // don't re-alert for the same symbol for 4 hours

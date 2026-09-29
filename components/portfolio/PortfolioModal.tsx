@@ -168,7 +168,7 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
         {showDeleteConfirm ? (
           <div className="p-4 rounded-2xl bg-loss/10 border border-loss/20 space-y-3 mb-4 animate-fade-in-up">
             <p className="text-xs font-bold text-loss">
-              ⚠️ ต้องการลบพอร์ต "{initialPortfolio?.name}" ใช่หรือไม่?
+              ⚠️ ต้องการลบพอร์ต &quot;{initialPortfolio?.name}&quot; ใช่หรือไม่?
             </p>
             <p className="text-[11px] text-muted leading-relaxed">
               รายการธุรกรรมในพอร์ตนี้จะถูกย้ายไปยังพอร์ตเริ่มต้น (Growth) โดยอัตโนมัติ ไม่ทำให้ประวัติการเทรดสูญหาย

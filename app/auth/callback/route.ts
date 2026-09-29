@@ -19,14 +19,18 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/';
 
   if (code) {
-    const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      if (!error) {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+
+      console.error('[Auth Callback] exchangeCodeForSession error:', error.message);
+    } catch (err) {
+      console.error('[Auth Callback] unexpected error:', err);
     }
-
-    console.error('[Auth Callback] exchangeCodeForSession error:', error.message);
   }
 
   // Redirect home with an error flag so the UI can show a message if needed

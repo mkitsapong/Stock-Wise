@@ -24,9 +24,9 @@ export default function ProfitLossBreakdown({ holdings, currencySymbol = '$' }: 
       };
     }
 
-    let winners: any[] = [];
-    let losers: any[] = [];
-    let breakeven: any[] = [];
+    const winners: any[] = [];
+    const losers: any[] = [];
+    const breakeven: any[] = [];
     let totalGain = 0;
     let totalLoss = 0;
 

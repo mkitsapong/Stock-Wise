@@ -180,7 +180,7 @@ export default function TransactionTable() {
           {transactions.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted">
-                No transactions found in this portfolio. Click "Add Transaction" above to start logging.
+                No transactions found in this portfolio. Click &quot;Add Transaction&quot; above to start logging.
               </p>
             </div>
           )}

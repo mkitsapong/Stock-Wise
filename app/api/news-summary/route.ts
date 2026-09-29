@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    let paragraphs: string[] = [];
+    const paragraphs: string[] = [];
 
     // Yahoo Finance articles usually put content in <div class="caas-body"> or <article>
     const contentAreas = $('.caas-body p, article p, .article-body p, .story-body p');

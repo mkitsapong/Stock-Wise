@@ -177,7 +177,7 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
           .order("date", { ascending: false });
 
         // Load local backup map
-        let localPortMap: Record<string, string> = {};
+        const localPortMap: Record<string, string> = {};
         try {
           const savedTxs = localStorage.getItem("stockwise_transactions");
           if (savedTxs) {

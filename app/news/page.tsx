@@ -87,9 +87,11 @@ export default function NewsPage() {
   const portfolioCount = news.filter((n) => n.source === "PORTFOLIO").length;
   const watchlistCount = news.filter((n) => n.source === "WATCHLIST").length;
 
+  const [currentTime] = useState(() => Date.now());
+
   function timeAgo(ts?: number) {
     if (!ts) return "";
-    const diff = Math.floor((Date.now() - ts * 1000) / 60000);
+    const diff = Math.floor((currentTime - ts * 1000) / 60000);
     if (diff < 60) return `${diff}m ago`;
     if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
     return `${Math.floor(diff / 1440)}d ago`;

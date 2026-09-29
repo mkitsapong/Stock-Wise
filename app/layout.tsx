@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
@@ -7,6 +7,12 @@ import { WatchlistProvider } from "@/context/WatchlistContext";
 import { TransactionProvider } from "@/context/TransactionContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import AuthModal from "@/components/auth/AuthModal";
+
+export const viewport: Viewport = {
+  themeColor: "#0f1117",
+  width: "device-width",
+  initialScale: 1,
+};
 
 const inter = Inter({
   variable: "--font-inter",

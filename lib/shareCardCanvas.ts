@@ -343,7 +343,7 @@ export function renderShareCardToCanvas(
   const statCardH = aspectRatio === "story" ? 140 : 105;
 
   // Best Performer calculation
-  let bestHolding = snapshot.holdings && snapshot.holdings.length > 0
+  const bestHolding = snapshot.holdings && snapshot.holdings.length > 0
     ? [...snapshot.holdings].sort((a, b) => b.plPercent - a.plPercent)[0]
     : null;
 

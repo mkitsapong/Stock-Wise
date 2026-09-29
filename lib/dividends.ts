@@ -353,7 +353,6 @@ export function enrichHoldingWithDividends(
   const currentPrice = holding.currentPrice || holding.avgCost || 1;
   const avgCost = holding.avgCost || 1;
   const shares = holding.shares || 0;
-  const positionValue = shares * currentPrice;
 
   let hasDividend = false;
   let annualDividend = 0;

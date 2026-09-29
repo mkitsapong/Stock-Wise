@@ -2,6 +2,7 @@ import CandlestickSection from "@/components/dashboard/CandlestickSection";
 import HeroCards from "@/components/dashboard/HeroCards";
 import BenchmarkComparison from "@/components/dashboard/BenchmarkComparison";
 import EarningsCalendar from "@/components/dashboard/EarningsCalendar";
+import LiveMarketDate from "@/components/dashboard/LiveMarketDate";
 
 export default function DashboardPage() {
   return (
@@ -19,12 +20,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <p className="text-sm text-muted mt-1 font-medium">
-            Live Market Overview · {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            Live Market Overview · <LiveMarketDate />
           </p>
         </div>
       </div>

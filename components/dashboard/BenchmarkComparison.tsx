@@ -35,6 +35,20 @@ const PERIODS = [
   { label: "MAX", range: "max", interval: "1mo" },
 ];
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="glass-card px-3 py-2 text-xs border border-border/60 shadow-xl rounded-xl">
+      <p className="text-muted font-medium mb-1">{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} style={{ color: p.color }} className="font-semibold">
+          {p.name}: {p.value?.toFixed(2)}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 export default function BenchmarkComparison({ className }: { className?: string }) {
   const { allTransactions } = useTransactions();
   const { formatCurrency } = useCurrency();
@@ -136,19 +150,6 @@ export default function BenchmarkComparison({ className }: { className?: string 
     return Math.random() * 20 - 5; // Will be replaced by real data once holdings price history is available
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <div className="glass-card px-3 py-2 text-xs border border-border/60 shadow-xl rounded-xl">
-        <p className="text-muted font-medium mb-1">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.dataKey} style={{ color: p.color }} className="font-semibold">
-            {p.name}: {p.value?.toFixed(2)}
-          </p>
-        ))}
-      </div>
-    );
-  };
 
   const returnColor = (v: number) => (v >= 0 ? "text-profit" : "text-loss");
 
