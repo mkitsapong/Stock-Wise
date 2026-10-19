@@ -20,6 +20,8 @@ interface AuthContextType {
   ) => Promise<{ error: string | null; needsEmailConfirmation?: boolean }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signInWithFacebook: () => Promise<{ error: string | null }>;
+  sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -131,6 +133,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? error.message : null };
   };
 
+  const sendPasswordReset = async (email: string) => {
+    if (!supabase) {
+      return { error: "Supabase is not configured yet." };
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/reset-password` : undefined,
+    });
+    return { error: error ? error.message : null };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    if (!supabase) {
+      return { error: "Supabase is not configured yet." };
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error ? error.message : null };
+  };
+
   const signOut = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -162,6 +182,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUpWithEmail,
         signInWithGoogle,
         signInWithFacebook,
+        sendPasswordReset,
+        updatePassword,
         signOut,
       }}
     >

@@ -55,8 +55,7 @@ const COLOR_PRESETS = [
 ];
 
 export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Props) {
-  const { addPortfolio, editPortfolio, deletePortfolio, activePortfolioId, setActivePortfolioId } =
-    useTransactions();
+  const { addPortfolio, editPortfolio, deletePortfolio, setActivePortfolioId } = useTransactions();
 
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
@@ -64,6 +63,8 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
   const [color, setColor] = useState("#10b981");
   const [description, setDescription] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isEditing = Boolean(initialPortfolio);
 
@@ -84,39 +85,55 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
       setDescription("");
     }
     setShowDeleteConfirm(false);
+    setErrorMsg(null);
+    setIsSaving(false);
   }, [initialPortfolio, isOpen]);
 
   if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSaving) return;
 
-    if (isEditing && initialPortfolio) {
-      await editPortfolio(initialPortfolio.id, {
-        name: name.trim(),
-        strategy,
-        color,
-        description: description.trim(),
-      });
-    } else {
-      const created = await addPortfolio({
-        name: name.trim(),
-        strategy,
-        color,
-        description: description.trim(),
-      });
-      // Switch to newly created portfolio
-      if (created) setActivePortfolioId(created.id);
+    setIsSaving(true);
+    setErrorMsg(null);
+    try {
+      if (isEditing && initialPortfolio) {
+        await editPortfolio(initialPortfolio.id, {
+          name: name.trim(),
+          strategy,
+          color,
+          description: description.trim(),
+        });
+      } else {
+        const created = await addPortfolio({
+          name: name.trim(),
+          strategy,
+          color,
+          description: description.trim(),
+        });
+        // Switch to newly created portfolio
+        if (created) setActivePortfolioId(created.id);
+      }
+      onClose();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setIsSaving(false);
     }
-
-    onClose();
   };
 
   const handleDelete = async () => {
-    if (initialPortfolio) {
+    if (!initialPortfolio || isSaving) return;
+    setIsSaving(true);
+    setErrorMsg(null);
+    try {
       await deletePortfolio(initialPortfolio.id);
       onClose();
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "ลบพอร์ตไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -177,9 +194,10 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
               <button
                 type="button"
                 onClick={handleDelete}
-                className="px-3.5 py-1.5 rounded-xl bg-loss text-white text-xs font-bold shadow-md hover:bg-loss/90 transition-all cursor-pointer"
+                disabled={isSaving}
+                className="px-3.5 py-1.5 rounded-xl bg-loss text-white text-xs font-bold shadow-md hover:bg-loss/90 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ยืนยันการลบ
+                {isSaving ? "กำลังลบ..." : "ยืนยันการลบ"}
               </button>
               <button
                 type="button"
@@ -191,6 +209,13 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
             </div>
           </div>
         ) : null}
+
+        {/* Error Message */}
+        {errorMsg && (
+          <div className="p-3 rounded-2xl bg-loss/10 border border-loss/20 text-xs font-medium text-loss mb-4 relative z-10">
+            {errorMsg}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
           {/* Portfolio Name */}
@@ -304,10 +329,11 @@ export default function PortfolioModal({ isOpen, onClose, initialPortfolio }: Pr
               </button>
               <button
                 type="submit"
+                disabled={isSaving}
                 style={{ backgroundColor: color }}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isEditing ? "Save Changes" : "Create Portfolio"}
+                {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Create Portfolio"}
               </button>
             </div>
           </div>

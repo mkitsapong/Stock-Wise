@@ -13,6 +13,7 @@ export default function AuthModal() {
     signUpWithEmail,
     signInWithGoogle,
     signInWithFacebook,
+    sendPasswordReset,
     isConfigured,
   } = useAuth();
 
@@ -20,7 +21,6 @@ export default function AuthModal() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export default function AuthModal() {
   const [hasErrorShake, setHasErrorShake] = useState(false);
   const [isEmailConfirmationView, setIsEmailConfirmationView] = useState(false);
 
-  // Reset fields when modal is closed or opened
+  // Reset messages when modal is opened or mode changes
   useEffect(() => {
     if (isAuthModalOpen) {
       setErrorMsg(null);
@@ -36,6 +36,15 @@ export default function AuthModal() {
       setIsEmailConfirmationView(false);
     }
   }, [isAuthModalOpen, authModalMode]);
+
+  // Clear sensitive fields when the modal is closed
+  useEffect(() => {
+    if (!isAuthModalOpen) {
+      setPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+    }
+  }, [isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
@@ -147,14 +156,27 @@ export default function AuthModal() {
     }
   };
 
-  const handleForgotPassword = (e: React.MouseEvent) => {
+  const handleForgotPassword = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!email) {
       triggerError("Please enter your email address above to receive reset instructions.");
       return;
     }
     setErrorMsg(null);
-    setSuccessMsg(`Password reset link has been sent to ${email}`);
+    setSuccessMsg(null);
+    setIsSubmitting(true);
+    try {
+      const { error } = await sendPasswordReset(email);
+      if (error) {
+        triggerError(error);
+      } else {
+        setSuccessMsg(`If an account exists for ${email}, a password reset link has been sent.`);
+      }
+    } catch (err: unknown) {
+      triggerError(err instanceof Error ? err.message : "Failed to send reset email.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -300,7 +322,7 @@ export default function AuthModal() {
               {/* Secure Sync Badge */}
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mt-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-medium text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>End-to-End Encrypted Cloud Sync</span>
+                <span>Secure Cloud Sync</span>
               </div>
             </div>
 
@@ -462,7 +484,8 @@ export default function AuthModal() {
                     <button
                       type="button"
                       onClick={handleForgotPassword}
-                      className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
+                      disabled={isSubmitting || !isConfigured}
+                      className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 hover:underline transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Forgot password?
                     </button>
@@ -559,22 +582,6 @@ export default function AuthModal() {
                 </div>
               )}
 
-              {/* Remember Me Checkbox (Sign In mode) */}
-              {authModalMode === "signin" && (
-                <div className="flex items-center gap-2 pt-0.5">
-                  <input
-                    id="rememberMe"
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-black/30 text-indigo-600 focus:ring-indigo-500/30 focus:ring-offset-0 transition-colors cursor-pointer accent-indigo-600"
-                  />
-                  <label htmlFor="rememberMe" className="text-xs text-muted select-none cursor-pointer hover:text-foreground">
-                    Remember me on this device
-                  </label>
-                </div>
-              )}
-
               {/* Submit Action Button */}
               <button
                 type="submit"
@@ -603,7 +610,7 @@ export default function AuthModal() {
                 <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                256-Bit SSL
+                HTTPS / TLS
               </span>
               <span className="flex items-center gap-1">
                 <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

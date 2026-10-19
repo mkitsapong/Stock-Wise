@@ -15,6 +15,8 @@ import { usePortfolioQuotes } from "@/hooks/usePortfolioQuotes";
 import { useCurrency } from "@/context/CurrencyContext";
 import {
   calculatePortfolioDividendSummary,
+  enrichHoldingWithDividends,
+  getDividendOverrides,
   saveDividendOverride,
   DividendFrequency,
   EnrichedDividendHolding,
@@ -31,11 +33,14 @@ export default function DividendSection() {
   const [customDividend, setCustomDividend] = useState<string>("");
   const [customYield, setCustomYield] = useState<string>("");
   const [customFreq, setCustomFreq] = useState<DividendFrequency>("Quarterly");
+  // Bumped after saving an override so memoized calculations re-read localStorage
+  const [overridesVersion, setOverridesVersion] = useState(0);
 
   // Calculate full dividend summary
   const dividendSummary = useMemo(
     () => calculatePortfolioDividendSummary(holdings),
-    [holdings]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [holdings, overridesVersion]
   );
 
   const {
@@ -72,10 +77,15 @@ export default function DividendSection() {
     }));
   }, [monthlySchedule]);
 
-  const nonDividendHoldings = useMemo(
-    () => holdings.filter((h) => !h.hasDividend || h.dividendYield === 0),
-    [holdings]
-  );
+  // Holdings not in the dividend list — enriched with the same overrides so the two lists never overlap
+  const nonDividendHoldings = useMemo(() => {
+    const payingSymbols = new Set(dividendHoldings.map((h) => h.symbol));
+    const overrides = getDividendOverrides();
+    return holdings
+      .filter((h) => !payingSymbols.has(h.symbol))
+      .map((h) => enrichHoldingWithDividends(h, overrides));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holdings, dividendHoldings, overridesVersion]);
 
   const handleOpenEdit = (h: EnrichedDividendHolding) => {
     setEditingHolding(h);
@@ -86,8 +96,10 @@ export default function DividendSection() {
 
   const handleSaveEdit = () => {
     if (!editingHolding) return;
-    const annualDiv = parseFloat(customDividend) || 0;
     const yieldPct = parseFloat(customYield) || 0;
+    const price = editingHolding.currentPrice || editingHolding.avgCost || 0;
+    // If only a yield was entered, derive the per-share amount from it
+    const annualDiv = parseFloat(customDividend) || (yieldPct > 0 && price > 0 ? (yieldPct / 100) * price : 0);
 
     let payoutMonths = [3, 6, 9, 12];
     if (customFreq === "Monthly") payoutMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -103,7 +115,7 @@ export default function DividendSection() {
     });
 
     setEditingHolding(null);
-    window.location.reload(); // reload to refresh all context calculations
+    setOverridesVersion((v) => v + 1);
   };
 
   // If no holdings at all
@@ -431,7 +443,7 @@ export default function DividendSection() {
             {nonDividendHoldings.map((nh) => (
               <button
                 key={nh.symbol}
-                onClick={() => handleOpenEdit(nh as EnrichedDividendHolding)}
+                onClick={() => handleOpenEdit(nh)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted-bg hover:bg-accent/15 border border-border/60 text-xs font-mono text-muted hover:text-foreground transition-all cursor-pointer"
               >
                 <span className="font-bold">{nh.symbol}</span>
@@ -476,8 +488,10 @@ export default function DividendSection() {
                   onChange={(e) => {
                     setCustomDividend(e.target.value);
                     const val = parseFloat(e.target.value);
-                    const price = editingHolding.currentPrice || editingHolding.avgCost || 1;
-                    if (val && price > 0) {
+                    const price = editingHolding.currentPrice || editingHolding.avgCost || 0;
+                    if (!Number.isFinite(val) || val <= 0) {
+                      setCustomYield("");
+                    } else if (price > 0) {
                       setCustomYield(((val / price) * 100).toFixed(2));
                     }
                   }}
